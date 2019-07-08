@@ -67,7 +67,7 @@ Download and build gocupi
 ---------------------------
 From your home directory
 
-    go get github.com/brandonagr/gocupi
+    go get github.com/vytis/gocupi
 
 Run gocupi
 ----------
