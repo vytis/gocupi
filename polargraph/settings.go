@@ -89,7 +89,7 @@ func (settings *SettingsData) Read() {
 	fileData, err := ioutil.ReadFile(settingsFile)
 	if err != nil {
 		// attempt to copy the default settings file from the gopath directory to the current working directory
-		repoSettingsFile := filepath.Join(os.Getenv("GOPATH"), "src/github.com/brandonagr/gocupi", settingsFile)
+		repoSettingsFile := filepath.Join(os.Getenv("GOPATH"), "src/github.com/vytis/gocupi", settingsFile)
 		if copyErr := copyFile(repoSettingsFile, settingsFile); copyErr != nil {
 			panic(copyErr)
 		}
