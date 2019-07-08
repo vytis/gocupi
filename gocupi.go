@@ -4,7 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	. "github.com/brandonagr/gocupi/polargraph"
+	. "github.com/vytis/gocupi/polargraph"
 	"github.com/qpliu/qrencode-go/qrencode"
 	"math"
 	"sort"
