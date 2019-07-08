@@ -150,7 +150,7 @@ func WriteStepsToSerial(stepData <-chan int8, pauseOnPenUp bool) {
 		fmt.Println("Pause on PenUp enabled!")
 	}
 
-	fmt.Println("Opening com port")
+	fmt.Println("Opening com port ", Settings.SerialPortPath)
 	c := &serial.Config{Name: Settings.SerialPortPath, Baud: 57600}
 	s, err := serial.OpenPort(c)
 	if err != nil {
@@ -283,7 +283,7 @@ func PerformMouseTracking() {
 	mouse := CreateAndStartMouseReader()
 	defer mouse.Close()
 
-	fmt.Println("Opening com port")
+	fmt.Println("Opening com port ", Settings.SerialPortPath)
 	c := &serial.Config{Name: Settings.SerialPortPath, Baud: 57600}
 	s, err := serial.OpenPort(c)
 	if err != nil {
