@@ -1,9 +1,9 @@
 package polargraph
 
 import (
-	chart "github.com/gonum/plot"
-	chartplotter "github.com/gonum/plot/plotter"
-	vg "github.com/gonum/plot/vg"
+	chart "gonum.org/v1/plot"
+	chartplotter "gonum.org/v1/plot/plotter"
+	vg "gonum.org/v1/plot/vg"
 	"image/color"
 )
 
