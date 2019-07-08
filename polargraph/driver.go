@@ -151,7 +151,7 @@ func WriteStepsToSerial(stepData <-chan int8, pauseOnPenUp bool) {
 	}
 
 	fmt.Println("Opening com port")
-	c := &serial.Config{Name: "/dev/ttyAMA0", Baud: 57600}
+	c := &serial.Config{Name: Settings.SerialPortPath, Baud: 57600}
 	s, err := serial.OpenPort(c)
 	if err != nil {
 		panic(err)
@@ -284,7 +284,7 @@ func PerformMouseTracking() {
 	defer mouse.Close()
 
 	fmt.Println("Opening com port")
-	c := &serial.Config{Name: "/dev/ttyAMA0", Baud: 57600}
+	c := &serial.Config{Name: Settings.SerialPortPath, Baud: 57600}
 	s, err := serial.OpenPort(c)
 	if err != nil {
 		panic(err)

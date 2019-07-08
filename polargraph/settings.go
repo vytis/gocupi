@@ -67,6 +67,9 @@ type SettingsData struct {
 	// path to mouse event file, use evtest to find
 	MousePath string
 
+	// path to serial port
+	SerialPortPath string
+
 	// MM traveled by a single step
 	StepSize_MM float64 `xml:"-"`
 

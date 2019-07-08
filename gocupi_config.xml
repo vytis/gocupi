@@ -30,4 +30,8 @@
 
 	<!-- Mouse path, used on linux with the mouse command in order to directly control pen with a mouse -->
 	<MousePath>/dev/input/event2</MousePath>
+
+	<!-- Serial port to use for communications -->
+	<SerialPortPath>/dev/ttyUSB0</SerialPortPath>
+
 </SettingsData>
