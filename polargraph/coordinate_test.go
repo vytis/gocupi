@@ -89,7 +89,7 @@ func TestToCoord(t *testing.T) {
 // Circle.Intersection(Line) should return expected results
 func TestCircleLineIntersection(t *testing.T) {
 
-	circle := Circle{Coordinate{X: 0, Y: 0}, 5}
+	circle := Circle{Coordinate{X: 0, Y: 0}, 5, false}
 	line := LineSegment{Coordinate{X: 0, Y: 0}, Coordinate{X: 2, Y: 0}}
 
 	p1, p1Valid, p2, p2Valid := circle.Intersection(line)
@@ -121,7 +121,7 @@ func TestCircleLineIntersection(t *testing.T) {
 		t.Error("Expected one intersection", p1, p2)
 	}
 
-	circle = Circle{Coordinate{X: 5, Y: 0}, 5}
+	circle = Circle{Coordinate{X: 5, Y: 0}, 5, false}
 	line = LineSegment{Coordinate{X: 0, Y: 0}, Coordinate{X: 0, Y: 1}}
 	p1, p1Valid, p2, p2Valid = circle.Intersection(line)
 	if (!p1Valid || p1 != Coordinate{X: 0, Y: 0} || p2Valid || p2 != Coordinate{X: 0, Y: 0}) {
