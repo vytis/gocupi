@@ -20,6 +20,10 @@ func (g *Glyph) DistanceTo(other Glyph) float64 {
 	return g.end().DistanceTo(other.start())
 }
 
+func (g *Glyph) DistanceToReversed(other Glyph) float64 {
+	return g.end().DistanceTo(other.end())
+}
+
 func (g *Glyph) Length() float64 {
 	length := 0.0
 	for i := 1; i < len(g.Coordinates); i++ {
