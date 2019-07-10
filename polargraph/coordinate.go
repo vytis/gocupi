@@ -86,6 +86,11 @@ func (coord Coordinate) Equals(other Coordinate) bool {
 	return diff.Len() < 0.00001 && coord.PenUp == other.PenUp
 }
 
+// Distance from this coordinate to other
+func (coord Coordinate) DistanceTo(other Coordinate) float64 {
+	return math.Sqrt( math.Pow(coord.X - other.X, 2) + math.Pow(coord.Y - other.Y, 2))
+}
+
 // PolarSystem information, 0,0 is always the upper left motor
 type PolarSystem struct {
 	XOffset, YOffset float64 // The location of X,Y origin relative to the motors

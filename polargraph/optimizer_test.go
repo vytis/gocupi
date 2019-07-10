@@ -48,6 +48,32 @@ func TestDistance(t *testing.T) {
 	if distance != 3.0 {
 		t.Error("Distance is wrong:", distance)
 	}
+}
+
+func TestLength(t *testing.T) {
+	g1_cords := make([]Coordinate, 2)
+	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	l1 := g1.Length()
+
+	if l1 != 5.0 {
+		t.Error("Length is wrong:", l1)
+	}
+
+	g2_cords := make([]Coordinate, 3)
+	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: false}
+	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
+	g2_cords[2] = Coordinate{X: 10, Y: 12, PenUp: false}
 
 
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	l2 := g2.Length()
+
+	if l2 != 15.0 {
+		t.Error("Length is wrong:", l2)
+	}
 }

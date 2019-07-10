@@ -1,7 +1,7 @@
 package polargraph
 
 import (
-	"math"
+
 )
 
 type Glyph struct {
@@ -17,7 +17,18 @@ func (g *Glyph) end() Coordinate {
 }
 
 func (g *Glyph) DistanceTo(other Glyph) float64 {
-	return math.Sqrt( math.Pow(g.end().X - other.start().X, 2) + math.Pow(g.end().Y - other.start().Y, 2))
+	return g.end().DistanceTo(other.start())
+}
+
+func (g *Glyph) Length() float64 {
+	length := 0.0
+	for i := 1; i < len(g.Coordinates); i++ {
+		prev := g.Coordinates[i - 1]
+		cur := g.Coordinates[i]
+		length += prev.DistanceTo(cur)
+	}
+	
+	return length
 }
 
 func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
