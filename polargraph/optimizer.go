@@ -31,6 +31,29 @@ func (g *Glyph) Length() float64 {
 	return length
 }
 
+func TotalTravelForGlyphs(glyphs []Glyph) float64 {
+	total := 0.0
+	for i := 0; i < len(glyphs); i++ {
+		glyph := glyphs[i]
+		total += glyph.Length()
+		if i > 0 {
+			prev := glyphs[i-1]
+			total += prev.DistanceTo(glyph)
+		}
+	}
+	return total
+}
+
+func TotalPenUpTravelForGlyphs(glyphs []Glyph) float64 {
+	total := 0.0
+	for i := 1; i < len(glyphs); i++ {
+		glyph := glyphs[i]
+		prev := glyphs[i-1]
+		total += prev.DistanceTo(glyph)
+	}
+	return total
+}
+
 func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
 	glyphs = make([]Glyph, 0)
 
