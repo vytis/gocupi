@@ -29,3 +29,25 @@ func TestSomething(t *testing.T) {
 		t.Error("Should have 1 coordinate, found", len(second.Coordinates))
 	}
 }
+
+func TestDistance(t *testing.T) {
+	g1_cords := make([]Coordinate, 2)
+	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	g2_cords := make([]Coordinate, 2)
+	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: false}
+	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
+
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	distance := g1.DistanceTo(g2)
+
+	if distance != 3.0 {
+		t.Error("Distance is wrong:", distance)
+	}
+
+
+}
