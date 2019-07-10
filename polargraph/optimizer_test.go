@@ -136,3 +136,17 @@ func TestPenUpTravel(t *testing.T) {
 
 }
 
+func TestReversed(t *testing.T) {
+	g1_cords := make([]Coordinate, 3)
+	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+	g1_cords[2] = Coordinate{X: 5, Y: 10, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	reversed := g1.Reversed()
+	if !reversed.Coordinates[0].Equals(g1.Coordinates[2]) {
+		t.Error("Not reversed:", reversed, g1)
+	}
+
+}

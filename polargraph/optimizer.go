@@ -31,6 +31,17 @@ func (g *Glyph) Length() float64 {
 	return length
 }
 
+func (g *Glyph) Reversed() Glyph {
+	reversed := make([]Coordinate, len(g.Coordinates))
+
+	for i := 0 ; i < len(g.Coordinates); i++ {
+		opp := len(g.Coordinates)-1-i
+		reversed[opp] = g.Coordinates[i]
+	}
+
+	return Glyph{Coordinates: reversed}
+}
+
 func TotalTravelForGlyphs(glyphs []Glyph) float64 {
 	total := 0.0
 	for i := 0; i < len(glyphs); i++ {
