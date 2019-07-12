@@ -159,3 +159,24 @@ func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
 
 	return glyphs
 }
+
+func MakeCoordinates(glyphs []Glyph) (coordinates []Coordinate) {
+	coordinates = make([]Coordinate, 0)
+	if len(glyphs) == 0 {
+		return
+	}
+
+	for i := 0; i < len(glyphs); i++ {
+		glyph := glyphs[i]
+		moveToStart := glyph.Coordinates[0]
+		moveToStart.PenUp = true
+		coordinates = append(coordinates, moveToStart)
+		coordinates = append(coordinates, glyph.Coordinates...)
+	}
+
+	last := coordinates[len(coordinates)-1]
+	last.PenUp = true
+	coordinates = append(coordinates, last)
+
+	return
+}

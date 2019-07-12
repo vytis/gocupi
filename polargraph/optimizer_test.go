@@ -276,3 +276,52 @@ func TestReorder(t *testing.T) {
 	}
 
 }
+
+func TestMakeCoordinates(t *testing.T) {
+	g1_cords := make([]Coordinate, 2)
+	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	g2_cords := make([]Coordinate, 2)
+	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: false}
+	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
+
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	glyphs := make([]Glyph, 2)
+	glyphs[0] = g1
+	glyphs[1] = g2
+
+	coordinates := MakeCoordinates(glyphs)
+
+	shouldBe := make([]Coordinate, 7)
+	// Move to start of glyph
+	shouldBe[0] = Coordinate{X: 0, Y: 5, PenUp: true}
+
+	// First glyph
+	shouldBe[1] = Coordinate{X: 0, Y: 5, PenUp: false}
+	shouldBe[2] = Coordinate{X: 5, Y: 5, PenUp: false}
+
+	// Move to second glyph
+	shouldBe[3] = Coordinate{X: 5, Y: 2, PenUp: true}
+
+	// Second glyph
+	shouldBe[4] = Coordinate{X: 5, Y: 2, PenUp: false}
+	shouldBe[5] = Coordinate{X: 10, Y: 2, PenUp: false}
+
+	// Pen up, we are done
+	shouldBe[6] = Coordinate{X: 10, Y: 2, PenUp: true}
+
+	if len(coordinates) != len(shouldBe) {
+		t.Error("Wrong number of coordinates, should be", len(shouldBe), "is", coordinates)
+		return
+	}
+
+	for i := 0; i < len(coordinates); i++ {
+		if !coordinates[i].Equals(shouldBe[i]) {
+			t.Error("Wrong coordinates at index", i, coordinates[i], "should be", shouldBe[i])
+		}
+	}
+}
