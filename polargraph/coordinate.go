@@ -93,7 +93,20 @@ func (coord Coordinate) DistanceTo(other Coordinate) float64 {
 
 // Some number that correlates with distance, faster to calculate
 func (coord Coordinate) SeparationFrom(other Coordinate) float64 {
-	return math.Max(math.Abs(other.X - coord.X), math.Abs(other.Y - coord.Y))
+	x := other.X - coord.X
+	if x < 0 {
+		x = -x
+	}
+	y := other.Y - coord.Y
+	if y < 0 {
+		y = -y
+	}
+
+	if y > x {
+		return y
+	} else {
+		return x
+	}
 }
 
 // PolarSystem information, 0,0 is always the upper left motor
