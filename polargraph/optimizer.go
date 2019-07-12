@@ -1,7 +1,8 @@
 package polargraph
 
 import (
-
+	"math"
+	"fmt"
 )
 
 type Glyph struct {
@@ -82,6 +83,56 @@ func TotalPenUpTravelForGlyphs(glyphs []Glyph) float64 {
 		total += prev.DistanceTo(glyph)
 	}
 	return total
+}
+
+func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
+	sorted = make([]Glyph, 0)
+	if len(glyphs) == 0 {
+		return
+	}
+
+	penUpDistanceBefore := TotalPenUpTravelForGlyphs(glyphs)
+
+	fmt.Println("Reordering, starting penUp distance:", penUpDistanceBefore)
+	sorted = append(sorted, glyphs[0])
+	glyphs = glyphs[1:]
+
+	for (len(glyphs) > 0) {
+
+		// Take last glyph from sorted ones
+		glyph := sorted[len(sorted) - 1]
+		distance, index, reversed := math.MaxFloat64, -1, false
+
+		// Find closest glyph 
+		for i := 0; i < len(glyphs); i++ {
+			otherGlyph := glyphs[i]
+			d := glyph.DistanceTo(otherGlyph)
+			if d < distance {
+				distance, index, reversed = d, i, false
+			}
+			r := glyph.DistanceToReversed(otherGlyph)
+			if r < distance {
+				distance, index, reversed = r, i, true
+			}
+		}
+		
+		closest := glyphs[index]
+		// Append original or reversed variant
+		if reversed {
+			sorted = append(sorted, closest.Reversed())
+		} else {
+			sorted = append(sorted, closest)
+		}
+
+		// Remove found glyph
+		glyphs = append(glyphs[:index], glyphs[index+1:]...)
+	}
+
+	penUpDistanceAfter := TotalPenUpTravelForGlyphs(sorted)
+
+	fmt.Println("Done, penUp distance:", penUpDistanceAfter, "reduced to", (float64(penUpDistanceAfter) / float64(penUpDistanceBefore)) * 100, "%" )
+
+	return sorted
 }
 
 func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {

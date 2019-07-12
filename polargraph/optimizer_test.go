@@ -203,3 +203,76 @@ func TestReversed(t *testing.T) {
 	}
 
 }
+
+func TestReorderEmpty(t *testing.T) {
+	reordered := ReorderGlyphs(make([]Glyph, 0))
+	if len(reordered) > 0 {
+		t.Error("Failed reordering:", reordered)
+	}
+}
+
+func TestReorderOne(t *testing.T) {
+	g1_cords := make([]Coordinate, 3)
+	g1_cords[0] = Coordinate{X: 1, Y: 11, PenUp: false}
+	g1_cords[1] = Coordinate{X: 3, Y: 11, PenUp: false}
+	g1_cords[2] = Coordinate{X: 4, Y: 10, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	glyphs := make([]Glyph, 1)
+	glyphs[0] = g1
+
+	reordered := ReorderGlyphs(glyphs)
+
+	if len(reordered) !=1 {
+		t.Error("Failed reordering:", reordered)
+	}
+}
+
+func TestReorder(t *testing.T) {
+	g1_cords := make([]Coordinate, 3)
+	g1_cords[0] = Coordinate{X: 1, Y: 11, PenUp: false}
+	g1_cords[1] = Coordinate{X: 3, Y: 11, PenUp: false}
+	g1_cords[2] = Coordinate{X: 4, Y: 10, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	g2_cords := make([]Coordinate, 2)
+	g2_cords[0] = Coordinate{X: 3, Y: 7, PenUp: false}
+	g2_cords[1] = Coordinate{X: 6, Y: 7, PenUp: false}
+
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	g3_cords := make([]Coordinate, 3)
+	g3_cords[0] = Coordinate{X: 4, Y: 9, PenUp: false}
+	g3_cords[1] = Coordinate{X: 7, Y: 9, PenUp: false}
+	g3_cords[2] = Coordinate{X: 7, Y: 7, PenUp: false}
+
+	g3 := Glyph{ Coordinates: g3_cords}
+
+
+	glyphs := make([]Glyph, 3)
+	glyphs[0] = g1
+	glyphs[1] = g2
+	glyphs[2] = g3
+
+
+	reordered := ReorderGlyphs(glyphs)
+
+	if len(reordered) != 3 {
+		t.Error("Wrong glyph count!")
+	}
+
+	if !reordered[0].Equals(g1) {
+		t.Error("First glyph wrong:", reordered[0])
+	}
+
+	if !reordered[1].Equals(g3) {
+		t.Error("Second glyph wrong:", reordered[1])
+	}
+
+	if !reordered[2].Equals(g2.Reversed()) {
+		t.Error("Third glyph wrong:", reordered[2])
+	}
+
+}
