@@ -139,20 +139,33 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 	sorted = append(sorted, glyphs[0])
 	glyphs = glyphs[1:]
 
+	// Pre-compute glyph starts and ends to keep them closer for fast access
+	starts := make([]Coordinate, len(glyphs))
+	ends := make([]Coordinate, len(glyphs))
+
+	for i := 0; i < len(glyphs); i++ {
+		glyph := glyphs[i]
+		starts[i] = glyph.start()
+		ends[i] = glyph.end()
+	}
+
 	for (len(glyphs) > 0) {
 
 		// Take last glyph from sorted ones
 		glyph := sorted[len(sorted) - 1]
+		glyph_end := glyph.end()
+		
 		distance, index, reversed := math.MaxFloat64, -1, false
 
 		// Find closest glyph 
 		for i := 0; i < len(glyphs); i++ {
-			otherGlyph := glyphs[i]
-			d := glyph.SeparationFrom(otherGlyph)
+			start := starts[i]
+			end := ends[i]
+			d := glyph_end.SeparationFrom(start)
 			if d < distance {
 				distance, index, reversed = d, i, false
 			}
-			r := glyph.SeparationFromReversed(otherGlyph)
+			r := glyph_end.SeparationFrom(end)
 			if r < distance {
 				distance, index, reversed = r, i, true
 			}
@@ -168,6 +181,9 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 
 		// Remove found glyph
 		glyphs = append(glyphs[:index], glyphs[index+1:]...)
+		starts = append(starts[:index], starts[index+1:]...)
+		ends = append(ends[:index], ends[index+1:]...)
+
 	}
 
 	penUpDistanceAfter := TotalPenUpTravelForGlyphs(sorted)
