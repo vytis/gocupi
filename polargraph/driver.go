@@ -197,10 +197,8 @@ func WriteStepsToSerial(stepData <-chan int8, pauseOnPenUp bool) {
 
 				// pause on pen up
 				if byteData == PenUpCommand {
-					fmt.Println("PenUp...")
 					pauseAfterWrite = pauseOnPenUp
 				} else if byteData == PenDownCommand {
-					fmt.Println("PenDown...")
 				}
 			}
 		}
