@@ -396,7 +396,8 @@ func main() {
 		}
 
 		fmt.Println("Generating svg path")
-		data := ParseSvgFile(args[2])
+		input := ParseSvgFile(args[2])
+		data := OptimizeTravel(input)
 		switch svgType {
 		case "top":
 			go GenerateSvgTopPath(data, size, plotCoords)

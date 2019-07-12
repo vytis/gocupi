@@ -85,6 +85,39 @@ func TotalPenUpTravelForGlyphs(glyphs []Glyph) float64 {
 	return total
 }
 
+func OptimizeTravel(input []Coordinate) (output []Coordinate) {
+	glyphs := MakeGlyphs(input)
+	optimizedGlyphs := ReorderGlyphs(glyphs)
+	output = MakeCoordinates(optimizedGlyphs)
+
+	return output
+}
+
+func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
+	glyphs = make([]Glyph, 0)
+
+	// First coordinate is always moving with pen up
+	penUp := 0
+	for i := 1; i < len(coordinates); i++ {
+		coordinate := coordinates[i]
+
+		if coordinate.PenUp {
+			// Slice from previous pen up to current, not including both sides
+			glyphCoordinates := coordinates[penUp + 1:i]
+			glyph := Glyph{Coordinates: glyphCoordinates}
+			glyphs = append(glyphs, glyph)
+			penUp = i
+		} 
+	}
+
+	// Last one is until the end
+	glyph := Glyph{Coordinates: coordinates[penUp + 1:]}
+	glyphs = append(glyphs, glyph)
+
+
+	return glyphs
+}
+
 func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 	sorted = make([]Glyph, 0)
 	if len(glyphs) == 0 {
@@ -133,31 +166,6 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 	fmt.Println("Done, penUp distance:", penUpDistanceAfter, "reduced to", (float64(penUpDistanceAfter) / float64(penUpDistanceBefore)) * 100, "%" )
 
 	return sorted
-}
-
-func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
-	glyphs = make([]Glyph, 0)
-
-	// First coordinate is always moving with pen up
-	penUp := 0
-	for i := 1; i < len(coordinates); i++ {
-		coordinate := coordinates[i]
-
-		if coordinate.PenUp {
-			// Slice from previous pen up to current, not including both sides
-			glyphCoordinates := coordinates[penUp + 1:i]
-			glyph := Glyph{Coordinates: glyphCoordinates}
-			glyphs = append(glyphs, glyph)
-			penUp = i
-		} 
-	}
-
-	// Last one is until the end
-	glyph := Glyph{Coordinates: coordinates[penUp + 1:]}
-	glyphs = append(glyphs, glyph)
-
-
-	return glyphs
 }
 
 func MakeCoordinates(glyphs []Glyph) (coordinates []Coordinate) {
