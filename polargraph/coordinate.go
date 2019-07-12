@@ -91,6 +91,11 @@ func (coord Coordinate) DistanceTo(other Coordinate) float64 {
 	return math.Sqrt( math.Pow(coord.X - other.X, 2) + math.Pow(coord.Y - other.Y, 2))
 }
 
+// Some number that correlates with distance, faster to calculate
+func (coord Coordinate) SeparationFrom(other Coordinate) float64 {
+	return math.Max(math.Abs(other.X - coord.X), math.Abs(other.Y - coord.Y))
+}
+
 // PolarSystem information, 0,0 is always the upper left motor
 type PolarSystem struct {
 	XOffset, YOffset float64 // The location of X,Y origin relative to the motors

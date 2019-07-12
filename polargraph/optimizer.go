@@ -17,6 +17,15 @@ func (g *Glyph) end() Coordinate {
 	return g.Coordinates[len(g.Coordinates) - 1]
 }
 
+// Not real distance, but much faster to calculate
+func (g *Glyph) SeparationFrom(other Glyph) float64 {
+	return g.end().SeparationFrom(other.start())
+}
+
+func (g *Glyph) SeparationFromReversed(other Glyph) float64 {
+	return g.end().SeparationFrom(other.end())
+}
+
 func (g *Glyph) DistanceTo(other Glyph) float64 {
 	return g.end().DistanceTo(other.start())
 }
@@ -139,11 +148,11 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 		// Find closest glyph 
 		for i := 0; i < len(glyphs); i++ {
 			otherGlyph := glyphs[i]
-			d := glyph.DistanceTo(otherGlyph)
+			d := glyph.SeparationFrom(otherGlyph)
 			if d < distance {
 				distance, index, reversed = d, i, false
 			}
-			r := glyph.DistanceToReversed(otherGlyph)
+			r := glyph.SeparationFromReversed(otherGlyph)
 			if r < distance {
 				distance, index, reversed = r, i, true
 			}
