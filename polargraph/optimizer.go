@@ -35,6 +35,21 @@ func (g *Glyph) Length() float64 {
 	return length
 }
 
+func (g *Glyph) Equals(other Glyph) bool {
+	if len(g.Coordinates) != len(other.Coordinates) {
+		return false
+	}
+
+	for i := 0; i < len(g.Coordinates); i++ {
+		if g.Coordinates[i] != other.Coordinates[i] {
+			return false
+		}
+
+	}
+
+	return true
+}
+
 func (g *Glyph) Reversed() Glyph {
 	reversed := make([]Coordinate, len(g.Coordinates))
 

@@ -98,6 +98,39 @@ func TestLength(t *testing.T) {
 	}
 }
 
+func TestEquals(t *testing.T) {
+	g1_cords := make([]Coordinate, 2)
+	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	g2_cords := make([]Coordinate, 2)
+	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: false}
+	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
+
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	g3_cords := make([]Coordinate, 2)
+	g3_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g3_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+
+	g3 := Glyph{ Coordinates: g3_cords}
+
+	if !g1.Equals(g1) {
+		t.Error("Should be equal to self")
+	}
+
+	if g1.Equals(g2) {
+		t.Error("Should not be equal")
+	}
+
+	if !g1.Equals(g3) {
+		t.Error("Should be equal to other")
+	}
+}
+
+
 func TestTotalTravel(t *testing.T) {
 	g1_cords := make([]Coordinate, 2)
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
