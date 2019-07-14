@@ -270,19 +270,17 @@ func ParseSVGLib(svgData io.Reader) (data []Coordinate) {
     	switch msg.Kind {
 
     	case svg.MoveInstruction:
-    		// fmt.Println("Move:", msg.M)
     		data = append(data, Coordinate{X: msg.M[0] * scaleX, Y: msg.M[1] * scaleY, PenUp: true})
     	case svg.CircleInstruction:
-    		panic("Circle not supported")
+    		fmt.Println("SVG: Circle not supported",)
     	case svg.CurveInstruction:
-    		panic("Curve not supported")
+    		fmt.Println("SVG: Curve not supported",)
     	case svg.LineInstruction:
-    		// fmt.Println("Line:", msg.M)
     		data = append(data, Coordinate{X: msg.M[0] * scaleX, Y: msg.M[1] * scaleY, PenUp: false})
     	case svg.HLineInstruction:
-    		panic("Hline not supported")
+    		fmt.Println("SVG: HLine not supported",)
     	case svg.CloseInstruction:
-    		panic("Close not supported")
+    		fmt.Println("SVG: Close not supported",)
     	case svg.PaintInstruction:
     		// fmt.Println("Paint: ignoring")
 
