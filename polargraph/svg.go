@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"github.com/rustyoz/svg"
 )
 
 // Used to decode xml data into a readable struct
@@ -235,7 +236,66 @@ func ParseSvgFile(fileName string) (data []Coordinate) {
 		panic(err)
 	}
 
-	return ParseSvg(file)
+	return ParseSVGLib(file)
+}
+
+func ParseSVGLib(svgData io.Reader) (data []Coordinate) {
+	data = make([]Coordinate, 0)
+
+	s, err := svg.ParseSvgFromReader(svgData, "Some", 1)
+
+	if err != nil {
+		panic(err)
+	}
+
+	c, _ := s.ParseDrawingInstructions()
+
+	var svgWidth, svgHeight float64
+	if _, werr := fmt.Sscanf(s.Width, "%fmm", &svgWidth); werr != nil {
+		panic(fmt.Sprint("Could not decode width:", svgWidth))
+	}
+	if _, herr := fmt.Sscanf(s.Height, "%fmm", &svgHeight); herr != nil {
+		panic(fmt.Sprint("Could not decode height:", svgHeight))
+	}
+
+	values, err := s.ViewBoxValues()
+	if err != nil {
+		panic(err)
+	}
+
+	width, height := values[2], values[3]
+	scaleX, scaleY := svgWidth / width, svgHeight / height
+
+	fmt.Println("Scale x:", scaleX, "y", scaleY)
+
+    for msg := range c {
+    	switch msg.Kind {
+
+    	case svg.MoveInstruction:
+    		// fmt.Println("Move:", msg.M)
+    		data = append(data, Coordinate{X: msg.M[0] * scaleX, Y: msg.M[1] * scaleY, PenUp: true})
+    	case svg.CircleInstruction:
+    		panic("Circle not supported")
+    	case svg.CurveInstruction:
+    		panic("Curve not supported")
+    	case svg.LineInstruction:
+    		// fmt.Println("Line:", msg.M)
+    		data = append(data, Coordinate{X: msg.M[0] * scaleX, Y: msg.M[1] * scaleY, PenUp: false})
+    	case svg.HLineInstruction:
+    		panic("Hline not supported")
+    	case svg.CloseInstruction:
+    		panic("Close not supported")
+    	case svg.PaintInstruction:
+    		// fmt.Println("Paint: ignoring")
+
+    	default:
+    		fmt.Println("Other:", msg.Kind)
+    		panic("A")
+    	}
+
+    }
+
+    return
 }
 
 // read svg xml data
@@ -465,6 +525,34 @@ func GenerateSvgBoxPath(data Coordinates, size float64, plotCoords chan<- Coordi
 	plotCoords <- Coordinate{X: 0, Y: 0, PenUp: true}
 }
 
+func GenerateSvgExactPath(data Coordinates, plotCoords chan<- Coordinate) {
+	defer close(plotCoords)
+
+	minPoint, maxPoint := data.Extents()
+
+	imageSize := maxPoint.Minus(minPoint)
+
+	fmt.Println("SVG Min:", minPoint, "Max:", maxPoint)
+
+	if imageSize.X > (Settings.DrawingSurfaceMaxX_MM-Settings.DrawingSurfaceMinX_MM) || imageSize.Y > (Settings.DrawingSurfaceMaxY_MM-Settings.DrawingSurfaceMinY_MM) {
+		panic(fmt.Sprint(
+			"SVG coordinates extend past drawable surface, as defined in setup. Svg size was: ",
+			imageSize,
+			" And settings bounds are, X: ", Settings.DrawingSurfaceMaxX_MM, " - ", Settings.DrawingSurfaceMinX_MM,
+			" Y: ", Settings.DrawingSurfaceMaxY_MM, " - ", Settings.DrawingSurfaceMinY_MM))
+	}
+
+	plotCoords <- Coordinate{X: 0, Y: 0, PenUp: true}
+
+	for index := 0; index < len(data); index++ {
+		curTarget := data[index]
+		plotCoords <- curTarget
+	}
+
+	plotCoords <- Coordinate{X: 0, Y: 0, PenUp: true}
+
+}
+
 // Send svg path points to channel
 func GenerateSvgTopPath(data Coordinates, size float64, plotCoords chan<- Coordinate) {
 
@@ -497,6 +585,9 @@ func GenerateSvgTopPath(data Coordinates, size float64, plotCoords chan<- Coordi
 	initialPosition.PenUp = false
 
 	fmt.Println("SVG initial top position:", initialPosition)
+
+
+	fmt.Printf("Printing %d coords\n", len(data))
 
 	for index := 0; index < len(data); index++ {
 		curTarget := data[(index+initialPositionIndex)%len(data)]

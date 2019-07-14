@@ -408,6 +408,9 @@ func main() {
 		case "center":
 			go GenerateSvgCenterPath(data, size, plotCoords)
 
+		case "exact":
+			go GenerateSvgExactPath(data, plotCoords)
+
 		default:
 			fmt.Println("Expected top or box as the svg type, and saw", svgType)
 			return
