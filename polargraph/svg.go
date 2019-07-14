@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/rustyoz/svg"
+	"github.com/vytis/svg"
 )
 
 // Used to decode xml data into a readable struct
