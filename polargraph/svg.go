@@ -266,8 +266,6 @@ func ParseSVGLib(svgData io.Reader) (data []Coordinate) {
 	width, height := values[2], values[3]
 	scaleX, scaleY := svgWidth / width, svgHeight / height
 
-	fmt.Println("Scale x:", scaleX, "y", scaleY)
-
     for msg := range c {
     	switch msg.Kind {
 
