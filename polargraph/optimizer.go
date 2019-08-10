@@ -71,6 +71,15 @@ func (g *Glyph) Reversed() Glyph {
 	return Glyph{Coordinates: reversed}
 }
 
+func (g *Glyph) CanBeMergedWith(other Glyph) bool {
+	return g.end().Equals(other.start())
+}
+
+func (g *Glyph) MergeWith(other Glyph) Glyph {
+	coordinates := append(g.Coordinates, other.Coordinates...)
+	return Glyph{ Coordinates: coordinates}
+}
+
 func TotalTravelForGlyphs(glyphs []Glyph) float64 {
 	total := 0.0
 	for i := 0; i < len(glyphs); i++ {
@@ -172,11 +181,21 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 		}
 		
 		closest := glyphs[index]
-		// Append original or reversed variant
+
+		var next Glyph
+		// Check if we need to reverse it
 		if reversed {
-			sorted = append(sorted, closest.Reversed())
+			next = closest.Reversed()
 		} else {
-			sorted = append(sorted, closest)
+			next = closest
+		}
+
+		// Merge with last or just add to list
+		if glyph.CanBeMergedWith(next) {
+			merged := glyph.MergeWith(next)
+			sorted[len(sorted) - 1] = merged
+		} else {
+			sorted = append(sorted, next)
 		}
 
 		// Remove found glyph

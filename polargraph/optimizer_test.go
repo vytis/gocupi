@@ -211,6 +211,51 @@ func TestReorderEmpty(t *testing.T) {
 	}
 }
 
+func TestCheckMergeGlyphs(t *testing.T) {
+	g1_cords := make([]Coordinate, 3)
+	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+	g1_cords[2] = Coordinate{X: 5, Y: 10, PenUp: false}
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	g2_cords := make([]Coordinate, 2)
+	g2_cords[0] = Coordinate{X: 5, Y: 10, PenUp: false}
+	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
+
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	if g1.CanBeMergedWith(g2) == false {
+		t.Error("Can be merged:", g1, g2)
+	}
+
+	if g2.CanBeMergedWith(g1) {
+		t.Error("Cannot be merged:", g2, g1)
+	}
+}
+
+func TestMergeGlyphs(t *testing.T) {
+	g1_cords := make([]Coordinate, 3)
+	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: false}
+	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
+	g1_cords[2] = Coordinate{X: 5, Y: 10, PenUp: false}
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	g2_cords := make([]Coordinate, 2)
+	g2_cords[0] = Coordinate{X: 5, Y: 10, PenUp: false}
+	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
+
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	merged := g1.MergeWith(g2)
+
+	all_coords := append(g1_cords, g2_cords...)
+	shouldBe := Glyph{Coordinates: all_coords}
+
+	if !merged.Equals(shouldBe) {
+		t.Error("Not merged correctly", g1, g2)
+	}
+}
+
 func TestReorderOne(t *testing.T) {
 	g1_cords := make([]Coordinate, 3)
 	g1_cords[0] = Coordinate{X: 1, Y: 11, PenUp: false}
@@ -275,6 +320,58 @@ func TestReorder(t *testing.T) {
 		t.Error("Third glyph wrong:", reordered[2])
 	}
 
+}
+
+func TestReorderMerge(t *testing.T) {
+	g1_cords := make([]Coordinate, 3)
+	g1_cords[0] = Coordinate{X: 1, Y: 11, PenUp: false}
+	g1_cords[1] = Coordinate{X: 3, Y: 11, PenUp: false}
+	g1_cords[2] = Coordinate{X: 4, Y: 10, PenUp: false}
+
+	g1 := Glyph{ Coordinates: g1_cords}
+
+	g2_cords := make([]Coordinate, 2)
+	g2_cords[0] = Coordinate{X: 3, Y: 7, PenUp: false}
+	g2_cords[1] = Coordinate{X: 7, Y: 7, PenUp: false}
+
+	g2 := Glyph{ Coordinates: g2_cords}
+
+	g3_cords := make([]Coordinate, 3)
+	g3_cords[0] = Coordinate{X: 4, Y: 9, PenUp: false}
+	g3_cords[1] = Coordinate{X: 7, Y: 9, PenUp: false}
+	g3_cords[2] = Coordinate{X: 7, Y: 7, PenUp: false}
+
+	g3 := Glyph{ Coordinates: g3_cords}
+
+	g4_cords := make([]Coordinate, 2)
+	g4_cords[0] = Coordinate{X: 3, Y: 7, PenUp: false}
+	g4_cords[1] = Coordinate{X: 9, Y: 9, PenUp: false}
+
+	g4 := Glyph{ Coordinates: g4_cords}
+
+	glyphs := make([]Glyph, 4)
+	glyphs[0] = g1
+	glyphs[1] = g2
+	glyphs[2] = g3
+	glyphs[3] = g4
+
+
+	reordered := ReorderGlyphs(glyphs)
+
+	if len(reordered) != 2 {
+		t.Error("Wrong glyph count!")
+	}
+
+	if !reordered[0].Equals(g1) {
+		t.Error("First glyph wrong:", reordered[0])
+	}
+
+	merged := g3.MergeWith(g2.Reversed())
+	final := merged.MergeWith(g4)
+
+	if !reordered[1].Equals(final) {
+		t.Error("Second glyph wrong:", reordered[1])
+	}
 }
 
 func TestMakeCoordinates(t *testing.T) {
