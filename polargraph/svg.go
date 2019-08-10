@@ -539,6 +539,8 @@ func GenerateSvgExactPath(data Coordinates, plotCoords chan<- Coordinate) {
 	}
 
 	plotCoords <- Coordinate{X: 0, Y: 0, PenUp: true}
+	firstPoint := data[0]
+	plotCoords <- Coordinate{X: firstPoint.X, Y: firstPoint.Y, PenUp: true}
 
 	for index := 0; index < len(data); index++ {
 		curTarget := data[index]
