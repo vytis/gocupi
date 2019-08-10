@@ -23,7 +23,7 @@ char penTransitionDirection; // -1, 0, 1
 const int PENUP_SERVO_PIN = 5;
 const long PENUP_TRANSITION_US = 524288; // time to go from pen up to down, or down to up
 const int PENUP_TRANSITION_US_LOG = 19; // 2^19 = 524288
-const long PENUP_COOLDOWN_US = 1250000;
+const long PENUP_COOLDOWN_US = 650000;
 const long PENUP_ANGLE = 40;
 const long PENDOWN_ANGLE = 140;
 #endif

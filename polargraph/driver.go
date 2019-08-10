@@ -116,7 +116,7 @@ func CountSteps(stepData <-chan int8) {
 	// since data is sent once for left and right spools, have to divide by 2
 	sliceCount = sliceCount >> 1
 	penTransition = penTransition >> 1
-	penTransitionCooldown_US := 1250000.0 // as defined in the microcontroller code
+	penTransitionCooldown_US := 650000.0 // as defined in the microcontroller code
 	fmt.Println("Steps", sliceCount, "Pen Transitions", penTransition, "Time", time.Duration(float64(sliceCount)*TimeSlice_US+float64(penTransition)*penTransitionCooldown_US)*time.Microsecond)
 }
 
