@@ -20,13 +20,30 @@ func TestSomething(t *testing.T) {
 	}
 
 	first := glyphs[0]
-	if len(first.Coordinates) != 2 {
-		t.Error("Should have 2 coordinates, found", len(first.Coordinates))
+	if len(first.Coordinates) != 3 {
+		t.Error("Should have 3 coordinates, found", len(first.Coordinates))
 	}
 
 	second := glyphs[1]
-	if len(second.Coordinates) != 1 {
-		t.Error("Should have 1 coordinate, found", len(second.Coordinates))
+	if len(second.Coordinates) != 2 {
+		t.Error("Should have 2 coordinates, found", len(second.Coordinates))
+	}
+}
+
+func TestLine(t *testing.T) {
+	coords := make([]Coordinate, 2)
+
+	coords[0] = Coordinate{X: 1, Y: 2, PenUp: true}
+	coords[1] = Coordinate{X: 2, Y: 3, PenUp: false}
+
+	glyphs := MakeGlyphs(coords)
+	if len(glyphs) != 1 {
+		t.Error("Should be 1 glyph, found", len(glyphs))
+	}
+
+	first := glyphs[0]
+	if len(first.Coordinates) != 2 {
+		t.Error("Should have 2 coordinates, found", len(first.Coordinates))
 	}
 }
 
@@ -421,4 +438,8 @@ func TestMakeCoordinates(t *testing.T) {
 			t.Error("Wrong coordinates at index", i, coordinates[i], "should be", shouldBe[i])
 		}
 	}
+}
+
+func TestMultipleLines(t *testing.T) {
+
 }

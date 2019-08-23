@@ -120,8 +120,8 @@ func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
 		coordinate := coordinates[i]
 
 		if coordinate.PenUp {
-			// Slice from previous pen up to current, not including both sides
-			glyphCoordinates := coordinates[penUp + 1:i]
+			// Slice from previous pen up to current
+			glyphCoordinates := coordinates[penUp:i]
 			glyph := Glyph{Coordinates: glyphCoordinates}
 			glyphs = append(glyphs, glyph)
 			penUp = i
@@ -129,7 +129,7 @@ func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
 	}
 
 	// Last one is until the end
-	glyph := Glyph{Coordinates: coordinates[penUp + 1:]}
+	glyph := Glyph{Coordinates: coordinates[penUp:]}
 	glyphs = append(glyphs, glyph)
 
 
