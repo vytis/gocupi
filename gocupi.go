@@ -395,9 +395,23 @@ func main() {
 			svgType = strings.ToLower(args[3])
 		}
 
+		optimize := false
+		if len(args) > 4 {
+			lastFlag := args[4]
+			if lastFlag == "optimize" {
+				optimize = true
+			}
+		}
+
 		fmt.Println("Generating svg path")
 		input := ParseSvgFile(args[2])
-		data := OptimizeTravel(input)
+		var data []Coordinate
+		if optimize {
+			data = OptimizeTravel(input)
+		} else {
+			data = input
+		}
+
 		switch svgType {
 		case "top":
 			go GenerateSvgTopPath(data, size, plotCoords)
