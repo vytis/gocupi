@@ -186,7 +186,7 @@ func main() {
 		cutOff := params[3]
 
 		fmt.Println("Reading stipples from voronoi_stipller")
-		circles := ParseSvgFileCircle(args[5])
+		circles := make([]Circle, 0);//Disabled for now
 		//fmt.Println("parsed data:",data)
 
 		fmt.Println("Generating meander")
@@ -378,33 +378,23 @@ func main() {
 		return
 
 	case "svg":
-		if len(args) < 3 {
+		if len(args) < 2 {
 			fmt.Println("ERROR: ", fmt.Sprint("Expected at least 2 parameters and saw ", len(args)-1))
 			fmt.Println()
 			PrintCommandHelp("svg")
 			return
 		}
 
-		size, _ := strconv.ParseFloat(args[1], 64)
-		if size == 0 {
-			size = 1
-		}
-
-		svgType := "top"
-		if len(args) > 3 {
-			svgType = strings.ToLower(args[3])
-		}
-
 		optimize := false
-		if len(args) > 4 {
-			lastFlag := args[4]
+		if len(args) > 2 {
+			lastFlag := args[2]
 			if lastFlag == "optimize" {
 				optimize = true
 			}
 		}
 
 		fmt.Println("Generating svg path")
-		input := ParseSvgFile(args[2])
+		input := ParseSvgFile(args[1])
 		var data []Coordinate
 		if optimize {
 			data = OptimizeTravel(input)
@@ -412,23 +402,7 @@ func main() {
 			data = input
 		}
 
-		switch svgType {
-		case "top":
-			go GenerateSvgTopPath(data, size, plotCoords)
-
-		case "box":
-			go GenerateSvgBoxPath(data, size, plotCoords)
-
-		case "center":
-			go GenerateSvgCenterPath(data, size, plotCoords)
-
-		case "exact":
-			go GenerateSvgExactPath(data, plotCoords)
-
-		default:
-			fmt.Println("Expected top or box as the svg type, and saw", svgType)
-			return
-		}
+		go GenerateSvgPath(data, plotCoords)
 
 	case "text":
 		if len(args) != 3 {
@@ -716,12 +690,9 @@ spool [L|R] d
 
 	`svg`: `Draw an svg file. Must be made up of only straight lines, curves are not currently supported in the svg parser.
 
-svg s "path" t
-	s - size of long axis
+svg "path" [optimize]
 	path - path to svg file
-	t - type of drawing, either top or box
-		top (default) - best for TSP single loop drawings, pen starts on loop at top
-		box - pen starts in upper left corner, drawing boundary extents first`,
+	optimize - if the flag is passed then pen travel will be optimized to reduce unnecessary movements`,
 
 	`text`: `Draw a given text string, font is based on the hershey simplex font.
 
