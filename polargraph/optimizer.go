@@ -64,19 +64,28 @@ func (g *Glyph) Reversed() Glyph {
 	reversed := make([]Coordinate, len(g.Coordinates))
 
 	for i := 0 ; i < len(g.Coordinates); i++ {
+		this := g.Coordinates[i]
+		if this.PenUp {
+			this.PenUp = false
+		}
 		opp := len(g.Coordinates)-1-i
-		reversed[opp] = g.Coordinates[i]
+		reversed[opp] = this
 	}
+
+	reversed[0].PenUp = true
 
 	return Glyph{Coordinates: reversed}
 }
 
 func (g *Glyph) CanBeMergedWith(other Glyph) bool {
-	return g.end().Equals(other.start())
+	return g.end().Same(other.start())
 }
 
 func (g *Glyph) MergeWith(other Glyph) Glyph {
-	coordinates := append(g.Coordinates, other.Coordinates...)
+	otherCoords := other.Coordinates
+	otherCoords[0].PenUp = false
+	coordinates := append(g.Coordinates, otherCoords...)
+	// coordinates[0].PenUp = true
 	return Glyph{ Coordinates: coordinates}
 }
 
@@ -132,6 +141,11 @@ func MakeGlyphs(coordinates []Coordinate) (glyphs []Glyph) {
 	glyph := Glyph{Coordinates: coordinates[penUp:]}
 	glyphs = append(glyphs, glyph)
 
+	for j := 0; j < len(glyphs); j++ {
+		if glyphs[j].start().PenUp == false {
+			panic(fmt.Sprint("Glyph at ", j, " starts without pen up: ", glyphs[j]))
+		}
+	}
 
 	return glyphs
 }
@@ -148,16 +162,6 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 	sorted = append(sorted, glyphs[0])
 	glyphs = glyphs[1:]
 
-	// Pre-compute glyph starts and ends to keep them closer for fast access
-	starts := make([]Coordinate, len(glyphs))
-	ends := make([]Coordinate, len(glyphs))
-
-	for i := 0; i < len(glyphs); i++ {
-		glyph := glyphs[i]
-		starts[i] = glyph.start()
-		ends[i] = glyph.end()
-	}
-
 	for (len(glyphs) > 0) {
 
 		// Take last glyph from sorted ones
@@ -168,8 +172,9 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 
 		// Find closest glyph 
 		for i := 0; i < len(glyphs); i++ {
-			start := starts[i]
-			end := ends[i]
+
+			start := glyphs[i].start()
+			end := glyphs[i].end()
 			d := glyph_end.SeparationFrom(start)
 			if d < distance {
 				distance, index, reversed = d, i, false
@@ -190,9 +195,22 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 			next = closest
 		}
 
+		if next.start().PenUp == false {
+			if reversed {
+				panic(fmt.Sprint("Reversed glyph starts without pen up"))
+			} else {
+				panic(fmt.Sprint("Glyph at ", index, " starts without pen up: ", next, " Sorted: ", len(sorted)))
+			}
+		}
+
+
 		// Merge with last or just add to list
 		if glyph.CanBeMergedWith(next) {
 			merged := glyph.MergeWith(next)
+			if merged.start().PenUp == false {
+				panic(fmt.Sprint("glyph starts without pen up. glyph: ",glyph ," next: ", next, " merged: ", merged))
+			}
+
 			sorted[len(sorted) - 1] = merged
 		} else {
 			sorted = append(sorted, next)
@@ -200,9 +218,6 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 
 		// Remove found glyph
 		glyphs = append(glyphs[:index], glyphs[index+1:]...)
-		starts = append(starts[:index], starts[index+1:]...)
-		ends = append(ends[:index], ends[index+1:]...)
-
 	}
 
 	penUpDistanceAfter := TotalPenUpTravelForGlyphs(sorted)
@@ -220,9 +235,15 @@ func MakeCoordinates(glyphs []Glyph) (coordinates []Coordinate) {
 
 	for i := 0; i < len(glyphs); i++ {
 		glyph := glyphs[i]
-		moveToStart := glyph.Coordinates[0]
-		moveToStart.PenUp = true
-		coordinates = append(coordinates, moveToStart)
+		if glyph.start().PenUp == false {
+			panic(fmt.Sprint("Glyph at ", i, " starts without pen up"))
+		}
+		for j := 1; j < len(glyph.Coordinates); j++ {
+			if glyph.Coordinates[j].PenUp == true {
+
+				panic(fmt.Sprint("Coord at ", j, " is pen up"))
+			}
+		}
 		coordinates = append(coordinates, glyph.Coordinates...)
 	}
 

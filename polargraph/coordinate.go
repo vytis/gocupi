@@ -86,6 +86,11 @@ func (coord Coordinate) Equals(other Coordinate) bool {
 	return diff.Len() < 0.00001 && coord.PenUp == other.PenUp
 }
 
+func (coord Coordinate) Same(other Coordinate) bool {
+	diff := coord.Minus(other)
+	return diff.Len() < 0.00001
+}
+
 // Distance from this coordinate to other
 func (coord Coordinate) DistanceTo(other Coordinate) float64 {
 	return math.Sqrt( math.Pow(coord.X - other.X, 2) + math.Pow(coord.Y - other.Y, 2))
