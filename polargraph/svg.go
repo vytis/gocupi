@@ -10,7 +10,7 @@ import (
 )
 
 // read a file
-func ParseSvgFile(fileName string) (data []Coordinate) {
+func ParseSvgFile(fileName string) (data []Coordinate, svgWidth float64, svgHeight float64) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		panic(err)
@@ -26,7 +26,6 @@ func ParseSvgFile(fileName string) (data []Coordinate) {
 
 	c, _ := s.ParseDrawingInstructions()
 
-	var svgWidth, svgHeight float64
 	if _, werr := fmt.Sscanf(s.Width, "%fmm", &svgWidth); werr != nil {
 		panic(fmt.Sprint("Could not decode width:", svgWidth))
 	}

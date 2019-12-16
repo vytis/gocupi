@@ -12,6 +12,48 @@ import (
 	"os"
 )
 
+func DrawToImageExact(imageName string, widthMM float64, heightMM float64, plotCoords <-chan Coordinate) {
+	paddingMM := 20.0
+
+	dpi := 150.0
+	mmToPixels := (dpi / 25.4)
+
+	paddingPx := paddingMM * mmToPixels
+
+	canvasWidth := (widthMM + paddingMM * 2) * mmToPixels
+	canvasHeight := (heightMM + paddingMM * 2) * mmToPixels
+
+	fmt.Println("Paper ", widthMM, "mm x ", heightMM, "mm. Image ", canvasWidth, "px x", canvasHeight, "px")
+
+	image := image.NewRGBA(image.Rect(0, 0, int(canvasWidth), int(canvasHeight)))
+
+	// draw border
+	drawLineExact(Coordinate{X: paddingPx, Y: paddingPx}, Coordinate{X: canvasWidth - paddingPx , Y: paddingPx}, image)
+	drawLineExact(Coordinate{X: canvasWidth - paddingPx, Y: paddingPx}, Coordinate{X: canvasWidth - paddingPx , Y: canvasHeight - paddingPx}, image)
+	drawLineExact(Coordinate{X: canvasWidth - paddingPx , Y: canvasHeight - paddingPx}, Coordinate{X: paddingPx , Y: canvasHeight - paddingPx}, image)
+	drawLineExact(Coordinate{X: paddingPx , Y: canvasHeight - paddingPx}, Coordinate{X: paddingPx , Y: paddingPx}, image)
+
+	// plot each point in the image
+	previousPoint := Coordinate{X: paddingPx, Y: paddingPx}
+	for point := range plotCoords {
+		//image.Set(int(point.X-minPoint.X), int(-(point.Y-minPoint.Y)+2*maxPoint.Y), color.RGBA{0, 0, 0, 255})
+		next := Coordinate{X: point.X * mmToPixels + paddingPx, Y: point.Y * mmToPixels + paddingPx, PenUp: point.PenUp}
+		drawLineExact(previousPoint, next, image)
+
+		previousPoint = next
+	}
+
+	file, err := os.OpenFile(imageName, os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	if err = png.Encode(file, image); err != nil {
+		panic(err)
+	}
+}
+
 // Draw coordinates to image
 func DrawToImage(imageName string, plotCoords <-chan Coordinate) {
 
@@ -68,11 +110,15 @@ func DrawToImage(imageName string, plotCoords <-chan Coordinate) {
 
 // Draw a line, from http://41j.com/blog/2012/09/bresenhams-line-drawing-algorithm-implemetations-in-go-and-c/
 func drawLine(start Coordinate, end Coordinate, minPoint Coordinate, maxPoint Coordinate, image *image.RGBA) {
+	drawLine(start, end, Coordinate{X: start.X - minPoint.X, Y: start.Y - minPoint.Y}, Coordinate{X: end.X - minPoint.X, Y: end.Y - minPoint.Y}, image)
+}
 
-	start_x := int(start.X - minPoint.X)
-	start_y := int(start.Y - minPoint.Y)
-	end_x := int(end.X - minPoint.X)
-	end_y := int(end.Y - minPoint.Y)
+// Draw a line, from http://41j.com/blog/2012/09/bresenhams-line-drawing-algorithm-implemetations-in-go-and-c/
+func drawLineExact(start Coordinate, end Coordinate, image *image.RGBA) {
+	start_x := int(start.X)
+	start_y := int(start.Y)
+	end_x := int(end.X)
+	end_y := int(end.Y)
 	var lineColor color.RGBA
 	if end.PenUp {
 		lineColor = color.RGBA{0, 255, 0, 255}

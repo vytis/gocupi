@@ -394,7 +394,7 @@ func main() {
 		}
 
 		fmt.Println("Generating svg path")
-		input := ParseSvgFile(args[1])
+		input, width, height := ParseSvgFile(args[1])
 		var data []Coordinate
 		if optimize {
 			data = OptimizeTravel(input)
@@ -403,6 +403,13 @@ func main() {
 		}
 
 		go GenerateSvgPath(data, plotCoords)
+
+		if *toImageFlag {
+			svgFileName := strings.Replace(args[1], ".svg", ".png", -1)
+			fmt.Println("Outputting to image ", svgFileName)
+			DrawToImageExact(svgFileName, width, height, plotCoords)
+			return
+		}
 
 	case "text":
 		if len(args) != 3 {
