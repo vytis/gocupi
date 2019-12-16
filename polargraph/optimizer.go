@@ -160,12 +160,16 @@ func ReorderGlyphs(glyphs []Glyph) (sorted []Glyph) {
 	penUpDistanceBefore := TotalPenUpTravelForGlyphs(glyphs)
 
 	fmt.Println("Reordering, starting penUp distance:", penUpDistanceBefore)
+
+	// Start with first glyph
 	sorted = append(sorted, glyphs[0])
+
+	// Loop through the rest
 	glyphs = glyphs[1:]
 
 	for (len(glyphs) > 0) {
 
-		// Take last glyph from sorted ones
+		// We take the last glyph and try to find next one that is closest
 		glyph := sorted[len(sorted) - 1]
 		glyph_end := glyph.end()
 		
@@ -241,7 +245,6 @@ func MakeCoordinates(glyphs []Glyph) (coordinates []Coordinate) {
 		}
 		for j := 1; j < len(glyph.Coordinates); j++ {
 			if glyph.Coordinates[j].PenUp == true {
-
 				panic(fmt.Sprint("Coord at ", j, " is pen up"))
 			}
 		}
