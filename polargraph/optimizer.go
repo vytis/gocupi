@@ -84,8 +84,9 @@ func (g *Glyph) CanBeMergedWith(other Glyph) bool {
 func (g *Glyph) MergeWith(other Glyph) Glyph {
 	otherCoords := other.Coordinates
 	otherCoords[0].PenUp = false
-	coordinates := append(g.Coordinates, otherCoords...)
-	// coordinates[0].PenUp = true
+	theseCoords := make([]Coordinate, len(g.Coordinates))
+	copy(theseCoords, g.Coordinates)
+	coordinates := append(theseCoords, otherCoords...)
 	return Glyph{ Coordinates: coordinates}
 }
 
