@@ -6,8 +6,18 @@ package polargraph
 import (
 	"fmt"
 	"os"
+
 	"github.com/vytis/svg"
 )
+
+func convertToMM(value float64, unit string) (inMM float64) {
+	switch unit {
+	case "mm":
+		return value
+	default:
+		return value * 25.4 / 96.0
+	}
+}
 
 // read a file
 func ParseSvgFile(fileName string) (data []Coordinate, svgWidth float64, svgHeight float64) {
@@ -26,47 +36,56 @@ func ParseSvgFile(fileName string) (data []Coordinate, svgWidth float64, svgHeig
 
 	c, _ := s.ParseDrawingInstructions()
 
-	if _, werr := fmt.Sscanf(s.Width, "%fmm", &svgWidth); werr != nil {
+	widthUnits := ""
+	readWidth, werr := fmt.Sscanf(s.Width, "%f%s", &svgWidth, &widthUnits)
+	if readWidth == 0 && werr != nil {
 		panic(fmt.Sprint("Could not decode width:", svgWidth))
 	}
-	if _, herr := fmt.Sscanf(s.Height, "%fmm", &svgHeight); herr != nil {
+	svgWidth = convertToMM(svgWidth, widthUnits)
+
+	heightUnits := ""
+	readHeight, herr := fmt.Sscanf(s.Height, "%f%s", &svgHeight, &heightUnits)
+	if readHeight == 0 && herr != nil {
 		panic(fmt.Sprint("Could not decode height:", svgHeight))
 	}
+	svgHeight = convertToMM(svgHeight, heightUnits)
 
+	fmt.Println("W:", svgWidth, widthUnits, " H:", svgHeight, heightUnits)
+	var scaleX, scaleY float64
 	values, err := s.ViewBoxValues()
-	if err != nil {
-		panic(err)
+	if err == nil {
+		width, height := convertToMM(values[2], "px"), convertToMM(values[3], "px")
+		scaleX, scaleY = svgWidth/width, svgHeight/height
+	} else {
+		scaleX, scaleY = 1, 1
 	}
 
-	width, height := values[2], values[3]
-	scaleX, scaleY := svgWidth / width, svgHeight / height
+	for msg := range c {
+		switch msg.Kind {
 
-    for msg := range c {
-    	switch msg.Kind {
+		case svg.MoveInstruction:
+			data = append(data, Coordinate{X: convertToMM(msg.M[0], "px") * scaleX, Y: convertToMM(msg.M[1], "px") * scaleY, PenUp: true})
+		case svg.CircleInstruction:
+			fmt.Println("SVG: Circle not supported")
+		case svg.CurveInstruction:
+			fmt.Println("SVG: Curve not supported")
+		case svg.LineInstruction:
+			data = append(data, Coordinate{X: convertToMM(msg.M[0], "px") * scaleX, Y: convertToMM(msg.M[1], "px") * scaleY, PenUp: false})
+		case svg.HLineInstruction:
+			fmt.Println("SVG: HLine not supported")
+		case svg.CloseInstruction:
+			fmt.Println("SVG: Close not supported")
+		case svg.PaintInstruction:
+			// fmt.Println("Paint: ignoring")
 
-    	case svg.MoveInstruction:
-    		data = append(data, Coordinate{X: msg.M[0] * scaleX, Y: msg.M[1] * scaleY, PenUp: true})
-    	case svg.CircleInstruction:
-    		fmt.Println("SVG: Circle not supported",)
-    	case svg.CurveInstruction:
-    		fmt.Println("SVG: Curve not supported",)
-    	case svg.LineInstruction:
-    		data = append(data, Coordinate{X: msg.M[0] * scaleX, Y: msg.M[1] * scaleY, PenUp: false})
-    	case svg.HLineInstruction:
-    		fmt.Println("SVG: HLine not supported",)
-    	case svg.CloseInstruction:
-    		fmt.Println("SVG: Close not supported",)
-    	case svg.PaintInstruction:
-    		// fmt.Println("Paint: ignoring")
+		default:
+			fmt.Println("Other:", msg.Kind)
+			panic("A")
+		}
 
-    	default:
-    		fmt.Println("Other:", msg.Kind)
-    		panic("A")
-    	}
+	}
 
-    }
-
-    return
+	return
 }
 
 func GenerateSvgPath(data Coordinates, plotCoords chan<- Coordinate) {
