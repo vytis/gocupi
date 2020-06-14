@@ -14,6 +14,8 @@ func convertToMM(value float64, unit string) (inMM float64) {
 	switch unit {
 	case "mm":
 		return value
+	case "cm":
+		return value * 10
 	default:
 		return value * 25.4 / 96.0
 	}
@@ -50,7 +52,7 @@ func ParseSvgFile(fileName string) (data []Coordinate, svgWidth float64, svgHeig
 	}
 	svgHeight = convertToMM(svgHeight, heightUnits)
 
-	fmt.Println("W:", svgWidth, widthUnits, " H:", svgHeight, heightUnits)
+	fmt.Println("W:", svgWidth, "mm", " H:", svgHeight, "mm")
 	var scaleX, scaleY float64
 	values, err := s.ViewBoxValues()
 	if err == nil {
