@@ -123,7 +123,8 @@ func (data *TrapezoidInterpolater) Setup(origin, dest, nextDest Coordinate) {
 	data.direction = data.direction.Normalized()
 
 	nextDirection := nextDest.Minus(dest)
-	if nextDirection.Len() == 0 || origin.PenUp != dest.PenUp {
+	if nextDirection.Len() == 0 ||
+		origin.PenUp == false && dest.PenUp == true {
 		// if there is no next direction or we have to stop for pen movement, make the exit speed 0 by pretending the next move will be backwards from current direction
 		nextDirection = Coordinate{X: -data.direction.X, Y: -data.direction.Y}
 	} else {

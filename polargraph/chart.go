@@ -1,16 +1,17 @@
 package polargraph
 
 import (
+	"image/color"
+
 	chart "gonum.org/v1/plot"
 	chartplotter "gonum.org/v1/plot/plotter"
 	vg "gonum.org/v1/plot/vg"
-	"image/color"
 )
 
 // Writes step data and position to a graph
 func WriteStepsToChart(stepData <-chan int8) {
 
-	maxNumberSteps := 1500
+	maxNumberSteps := 15000
 
 	leftVel := make(chartplotter.XYs, maxNumberSteps)
 	rightVel := make(chartplotter.XYs, maxNumberSteps)
@@ -96,7 +97,7 @@ func WriteStepsToChart(stepData <-chan int8) {
 	p.Legend.Add("Right Vel", rightVelLine)
 
 	// Save the plot to a PNG file.
-	if err := p.Save(14, 8.5, "chart.png"); err != nil {
+	if err := p.Save(5000, 500, "chart.png"); err != nil {
 		panic(err)
 	}
 }
