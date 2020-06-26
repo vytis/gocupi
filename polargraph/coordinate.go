@@ -31,12 +31,12 @@ func (coord Coordinate) Len() float64 {
 
 // Add two coordinates together
 func (source Coordinate) Add(dest Coordinate) Coordinate {
-	return Coordinate{dest.X + source.X, dest.Y + source.Y, dest.PenUp || source.PenUp}
+	return Coordinate{dest.X + source.X, dest.Y + source.Y, dest.PenUp}
 }
 
 // Return the vector from source to dest
 func (source Coordinate) Minus(dest Coordinate) Coordinate {
-	return Coordinate{source.X - dest.X, source.Y - dest.Y, source.PenUp || dest.PenUp}
+	return Coordinate{source.X - dest.X, source.Y - dest.Y, dest.PenUp}
 }
 
 // Scales the Coordinate by the specified factor
@@ -93,7 +93,7 @@ func (coord Coordinate) Same(other Coordinate) bool {
 
 // Distance from this coordinate to other
 func (coord Coordinate) DistanceTo(other Coordinate) float64 {
-	return math.Sqrt( math.Pow(coord.X - other.X, 2) + math.Pow(coord.Y - other.Y, 2))
+	return math.Sqrt(math.Pow(coord.X-other.X, 2) + math.Pow(coord.Y-other.Y, 2))
 }
 
 // Some number that correlates with distance, faster to calculate

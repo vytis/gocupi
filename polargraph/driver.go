@@ -5,12 +5,13 @@ package polargraph
 import (
 	"bufio"
 	"fmt"
-	serial "github.com/tarm/goserial"
 	"io"
 	"math"
 	"os"
 	"strings"
 	"time"
+
+	serial "github.com/tarm/goserial"
 )
 
 // Output the coordinates to the screen
@@ -43,13 +44,13 @@ func GenerateSteps(plotCoords <-chan Coordinate, stepData chan<- int8) {
 	polarSystem.YOffset = startingLocation.Y
 
 	//var interp PositionInterpolater = new(LinearInterpolater)
-	var interp PositionInterpolater = new(TrapezoidInterpolater)
+	var interp = new(TrapezoidInterpolater)
 
-	origin := Coordinate{X: 0, Y: 0}
 	target, chanOpen := <-plotCoords
 	if !chanOpen {
 		return
 	}
+	origin := target
 
 	var currentPenUp bool = true // arduino code defaults to pen up on ResetCommand
 	var anotherTarget bool = true
@@ -94,7 +95,7 @@ func GenerateSteps(plotCoords <-chan Coordinate, stepData chan<- int8) {
 			stepData <- int8(-sliceSteps.LeftDist)
 			stepData <- int8(sliceSteps.RightDist)
 		}
-		origin = previousPolarPos.ToCoord(polarSystem)
+		origin = target
 		target = nextTarget
 	}
 	fmt.Println("Done generating steps")
