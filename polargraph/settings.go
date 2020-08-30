@@ -14,7 +14,7 @@ const (
 	// decreasing this increases CPU usage and serial communication
 	// increasing it decreases rendering quality
 	// when running on a raspberry pi 2048 us (2 milliseconds) seems like a good number
-	TimeSlice_US float64 = 2048
+	TimeSlice_US float64 = 1024
 
 	// The factor the steps are multiplied by, needs to be the same as set in the arduino code
 	StepsFixedPointFactor float64 = 32.0
