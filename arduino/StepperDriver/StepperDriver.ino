@@ -2,34 +2,41 @@
   Gocupi Arduino Code
   Reads movement commands over serial and controls two stepper motors 
 */
+#include <SPI.h>
+#include "TMC5072_register.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 // comment out to disable PENUP support
 #define ENABLE_PENUP
 
 // Constants and global variables
 // --------------------------------------
-const int LED_PINS_COUNT = 4;
+const int LED_PINS_COUNT = 2;
 const int LED_PINS[LED_PINS_COUNT] = {
-  2,3,4,8}; // the pins of all of the leds, first 3 are status lights, 5th is receive indicator
-const int LEFT_STEP_PIN = 7;
-const int LEFT_DIR_PIN = 6;
-const int RIGHT_STEP_PIN = 9;
-const int RIGHT_DIR_PIN = 10;
+  2,3}; // the pins of all of the leds, first 3 are status lights, 5th is receive indicator
+const int LEFT_STEP_PIN = 6;
+const int LEFT_DIR_PIN = 7;
+const int RIGHT_STEP_PIN = 8;
+const int RIGHT_DIR_PIN = 9;
+const int chipCS = 10;
+const int MOTOR_ENABLE = 5;
 
 #ifdef ENABLE_PENUP
 #include <Servo.h>
 Servo penUpServo;
 char penTransitionDirection; // -1, 0, 1
-const int PENUP_SERVO_PIN = 5;
+const int PENUP_SERVO_PIN = 4;
 const long PENUP_TRANSITION_US = 524288; // time to go from pen up to down, or down to up
 const int PENUP_TRANSITION_US_LOG = 19; // 2^19 = 524288
 const long PENUP_COOLDOWN_US = 650000;
-const long PENUP_ANGLE = 20;
-const long PENDOWN_ANGLE = 140;
+const long PENUP_ANGLE = 140;
+const long PENDOWN_ANGLE = 40;
 #endif
 
-const unsigned int TIME_SLICE_US = 2048; // number of microseconds per time step
-const unsigned int TIME_SLICE_US_LOG = 11; // log base 2 of TIME_SLICE_US
+const unsigned int TIME_SLICE_US = 1024; // number of microseconds per time step
+const unsigned int TIME_SLICE_US_LOG = 10; // log base 2 of TIME_SLICE_US
 const unsigned int POS_FACTOR = 32; // fixed point factor each position is multiplied by
 const unsigned int POS_FACTOR_LOG = 5; // log base 2 of POS_FACTOR, used after multiplying two fixed point numbers together
 
@@ -50,12 +57,28 @@ long leftCurPos, rightCurPos; // current position of the spools
 unsigned long curTime; // current time in microseconds
 unsigned long sliceStartTime; // start of current slice in microseconds
 
+typedef struct Data {
+    byte value[4];
+} Data;
+
 
 // setup
 // --------------------------------------
 void setup() {
   Serial.begin(57600);
   Serial.setTimeout(0);
+
+  pinMode(chipCS,OUTPUT);
+  pinMode(MOTOR_ENABLE,OUTPUT);
+  digitalWrite(chipCS,HIGH);
+  digitalWrite(MOTOR_ENABLE,HIGH);
+
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV32);
+  SPI.setDataMode(SPI_MODE3);
+  SPI.begin();
+
+  setupMotors();
 
   // setup pins
   for(int ledIndex = 0; ledIndex < LED_PINS_COUNT; ledIndex++) {
@@ -81,6 +104,99 @@ void setup() {
   delay(500);
   UpdateReceiveLed(false);
   UpdateStatusLeds(0);
+  digitalWrite(MOTOR_ENABLE,LOW);
+
+}
+
+void setupMotors() 
+{
+  const unsigned long MSTEPS_256 = 0x0;
+  const unsigned long MSTEPS_128 = 0x1;
+  const unsigned long MSTEPS_64  = 0x2;
+  const unsigned long MSTEPS_32  = 0x3;
+  const unsigned long MSTEPS_16  = 0x4;
+  const unsigned long MSTEPS_8   = 0x5;
+  const unsigned long MSTEPS_4   = 0x6;
+  const unsigned long MSTEPS_2   = 0x7;
+  const unsigned long MSTEPS_1   = 0x8;
+
+  const Data chop = {0x10 + MSTEPS_16, 0x1, 0x0, 0xC5};
+  const Data ihold = {0x0, 0x06, 0x1F, 0x0};
+  const Data zerowait = {0x0, 0x0, 0x27, 0x10};
+  const Data pwm = {0x01, 0x20, 0x0, 0x0};
+  
+  // m1 to step/dir
+  sendData(TMC5072_CHOPCONF_1,  chop);
+  sendData(TMC5072_IHOLD_IRUN_1, ihold);
+  sendData(TMC5072_TZEROWAIT_1, zerowait);
+  sendData(TMC5072_PWMCONF_1, pwm);
+
+
+  sendData(TMC5072_CHOPCONF_2,  chop);
+  sendData(TMC5072_IHOLD_IRUN_2, ihold);
+  sendData(TMC5072_TZEROWAIT_2, zerowait);
+  sendData(TMC5072_PWMCONF_2, pwm);
+
+  sendData(TMC5072_GCONF, {0x0, 0x0, 0x0, 0x6});
+}
+
+void sendData(byte address, Data datagram) {
+  //TMC5130 takes 40 bit data: 8 address and 32 data
+
+//  delay(100);
+  unsigned long i_datagram;
+
+  digitalWrite(chipCS,LOW);
+  delayMicroseconds(10);
+  Serial.print(datagram.value[0], HEX);
+  Serial.print(datagram.value[1], HEX);
+  Serial.print(datagram.value[2], HEX);
+  Serial.print(datagram.value[3], HEX);
+
+  SPI.transfer(address + 0x80);  
+
+  i_datagram |= SPI.transfer(datagram.value[0]);
+  i_datagram <<= 8;
+  i_datagram |= SPI.transfer(datagram.value[1]);
+  i_datagram <<= 8;
+  i_datagram |= SPI.transfer(datagram.value[2]);
+  i_datagram <<= 8;
+  i_datagram |= SPI.transfer(datagram.value[3]);
+
+  delayMicroseconds(10);
+  digitalWrite(chipCS,HIGH);
+}
+
+void readData(unsigned long address) {
+  //TMC5130 takes 40 bit data: 8 address and 32 data
+
+//  delay(100);
+  unsigned long i_datagram;
+
+  digitalWrite(chipCS,LOW);
+//  delayMicroseconds(10);
+
+  SPI.transfer(address);
+  SPI.transfer(0); SPI.transfer(0); SPI.transfer(0); SPI.transfer(0);
+  delayMicroseconds(10);
+
+  
+  
+  SPI.transfer(address);
+
+  i_datagram |= SPI.transfer(0);
+  i_datagram <<= 8;
+  i_datagram |= SPI.transfer(0);
+  i_datagram <<= 8;
+  i_datagram |= SPI.transfer(0);
+  i_datagram <<= 8;
+  i_datagram |= SPI.transfer(0);
+  digitalWrite(chipCS,HIGH);
+
+//  Serial.print("Received: ");
+//  Serial.print(i_datagram,HEX);
+//  Serial.print(" from register: ");
+//  Serial.println(address,HEX);
 }
 
 // Reset all movement variables
@@ -181,7 +297,7 @@ void UpdateStepperPins(long curSliceTime) {
     }
 
     if (leftSteps || rightSteps) {
-      delayMicroseconds(50); // delay a small amount of time before refiring the steps to smooth things out
+//      delayMicroseconds(50); // delay a small amount of time before refiring the steps to smooth things out
     } else {
       break;
     }
@@ -296,8 +412,12 @@ void ReadSerialMoveData() {
       moveDataRequestPending = 0;
       moveDataLength = 0;
       UpdateReceiveLed(false);
+//      digitalWrite(MOTOR_ENABLE,HIGH);
+
       return;
     }
+//    digitalWrite(MOTOR_ENABLE,LOW);
+
 
     MoveDataPut(value);
     moveDataRequestPending--;
