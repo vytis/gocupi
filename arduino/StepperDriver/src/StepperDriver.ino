@@ -67,9 +67,7 @@ long leftCurPos, rightCurPos; // current position of the spools
 unsigned long curTime; // current time in microseconds
 unsigned long sliceStartTime; // start of current slice in microseconds
 
-typedef struct Data {
-    byte value[4];
-} Data;
+
 
 
 // setup

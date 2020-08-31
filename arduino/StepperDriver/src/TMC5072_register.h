@@ -8,6 +8,10 @@
 #ifndef TMC5072_REGISTER_H
 #define TMC5072_REGISTER_H
 
+typedef struct Data {
+    byte value[4];
+} Data;
+
   // ===== TMC5072 register set =====
 
   #define TMC5072_GCONF        0x00
