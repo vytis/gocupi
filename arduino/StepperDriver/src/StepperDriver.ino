@@ -15,19 +15,29 @@
 // --------------------------------------
 const int LED_PINS_COUNT = 2;
 const int LED_PINS[LED_PINS_COUNT] = {
-  2,3}; // the pins of all of the leds, first 3 are status lights, 5th is receive indicator
-const int LEFT_STEP_PIN = 6;
-const int LEFT_DIR_PIN = 7;
-const int RIGHT_STEP_PIN = 8;
-const int RIGHT_DIR_PIN = 9;
+  16,17}; // the pins of all of the leds, first 3 are status lights, 5th is receive indicator
+
+const int PENUP_SERVO_PIN = 2;
+const int INT_PIN = 3; // ENC1A
+const int INT_PP_PIN = 4; // ENC1B
+
+const int LEFT_STEP_PIN = 5; // ENC1N
+
+const int LEFT_DIR_PIN = 6; // ENC2A
+const int RIGHT_DIR_PIN = 7; // ENC2B
+const int RIGHT_STEP_PIN = 8; // ENC2N
+
+const int MOTOR_ENABLE = 9;
+
 const int chipCS = 10;
-const int MOTOR_ENABLE = 5;
+const int SDI = 11;
+const int SDO = 12;
+const int CLOCK = 13; //SCK
 
 #ifdef ENABLE_PENUP
 #include <Servo.h>
 Servo penUpServo;
 char penTransitionDirection; // -1, 0, 1
-const int PENUP_SERVO_PIN = 4;
 const long PENUP_TRANSITION_US = 524288; // time to go from pen up to down, or down to up
 const int PENUP_TRANSITION_US_LOG = 19; // 2^19 = 524288
 const long PENUP_COOLDOWN_US = 650000;
