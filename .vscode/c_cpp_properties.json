@@ -4,7 +4,8 @@
             "name": "Mac",
             "includePath": [
                 "/Users/mnx/Library/Arduino15/packages/arduino/tools/**",
-                "/Users/mnx/Library/Arduino15/packages/arduino/hardware/avr/1.8.3/**"
+                "/Users/mnx/Library/Arduino15/packages/arduino/hardware/avr/1.8.3/**",
+                "/Users/mnx/Documents/Arduino/libraries/**"
             ],
             "forcedInclude": [
                 "/Users/mnx/Library/Arduino15/packages/arduino/hardware/avr/1.8.3/cores/arduino/Arduino.h"
@@ -16,7 +17,8 @@
             "intelliSenseMode": "clang-x64",
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "defines": ["USBCON"]
         }
     ],
     "version": 4

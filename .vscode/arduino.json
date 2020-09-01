@@ -2,5 +2,6 @@
     "board": "arduino:avr:uno",
     "port": "/dev/tty.SLAB_USBtoUART",
     "programmer": "USBtinyISP",
-    "sketch": "arduino/StepperDriver/src/StepperDriver.ino"
+    "sketch": "arduino/StepperDriver/src/StepperDriver.ino",
+    "output" :"arduino/StepperDriver/build"
 }
