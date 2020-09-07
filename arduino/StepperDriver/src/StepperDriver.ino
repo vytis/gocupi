@@ -3,10 +3,9 @@
   Reads movement commands over serial and controls two stepper motors 
 */
 #include <SPI.h>
-#include "TMC5072_register.h"
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "TMC_API.h"
+#include "TMC5072.h"
+
 
 // comment out to disable PENUP support
 #define ENABLE_PENUP
@@ -67,8 +66,33 @@ long leftCurPos, rightCurPos; // current position of the spools
 unsigned long curTime; // current time in microseconds
 unsigned long sliceStartTime; // start of current slice in microseconds
 
+// typedef TMC5072TypeDef TMC5072;
+// typedef ConfigurationTypeDef Config;
+
+// TMC5072TypeDef state = {0};
+
+void tmc5072_readWriteArray(uint8_t channel, uint8_t *data, size_t length) {
+  //TMC5130 takes 40 bit data: 8 address and 32 data
+  digitalWrite(chipCS,LOW);
+
+  // for (size_t i = 0; i < length; i++)
+  // {
+  //   data[i] = SPI.transfer(data[i]);  
+  // }
 
 
+  // i_datagram |= SPI.transfer(datagram.value[0]);
+  // i_datagram <<= 8;
+  // i_datagram |= SPI.transfer(datagram.value[1]);
+  // i_datagram <<= 8;
+  // i_datagram |= SPI.transfer(datagram.value[2]);
+  // i_datagram <<= 8;
+  // i_datagram |= SPI.transfer(datagram.value[3]);
+  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
+  SPI.transfer(data, length);
+  SPI.endTransaction();
+  digitalWrite(chipCS,HIGH);
+}
 
 // setup
 // --------------------------------------
@@ -118,6 +142,9 @@ void setup() {
 
 void setupMotors() 
 {
+  // tmc5072_init(&state, 0, state.config, tmc5072_defaultRegisterResetState);
+
+
   const unsigned long MSTEPS_256 = 0x0;
   const unsigned long MSTEPS_128 = 0x1;
   const unsigned long MSTEPS_64  = 0x2;
@@ -128,84 +155,125 @@ void setupMotors()
   const unsigned long MSTEPS_2   = 0x7;
   const unsigned long MSTEPS_1   = 0x8;
 
-  const Data chop = {0x10 + MSTEPS_16, 0x1, 0x0, 0xC5};
-  const Data ihold = {0x0, 0x06, 0x1F, 0x0};
-  const Data zerowait = {0x0, 0x0, 0x27, 0x10};
-  const Data pwm = {0x01, 0x20, 0x0, 0x0};
+  // const Data chop = {0x10 + MSTEPS_16, 0x1, 0x0, 0xC5};
+  // const Data ihold = {0x0, 0x06, 0x1F, 0x0};
+  // const Data zerowait = {0x0, 0x0, 0x27, 0x10};
+  // const Data pwm = {0x01, 0x20, 0x0, 0x0};
   
   // m1 to step/dir
-  sendData(TMC5072_CHOPCONF_1,  chop);
-  sendData(TMC5072_IHOLD_IRUN_1, ihold);
-  sendData(TMC5072_TZEROWAIT_1, zerowait);
-  sendData(TMC5072_PWMCONF_1, pwm);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 4);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 1);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 2);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 5);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 4);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 1);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 2);
+  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 5);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(1), TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 5);
+  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(1), TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 31);
+  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(1), TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 6);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(2), TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 5);
+  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(2), TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 31);
+  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(2), TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 6);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_TZEROWAIT(1), TMC5072_TZEROWAIT_MASK, TMC5072_TZEROWAIT_SHIFT, 10000);
+  TMC5072_FIELD_WRITE(&state, TMC5072_TZEROWAIT(2), TMC5072_TZEROWAIT_MASK, TMC5072_TZEROWAIT_SHIFT, 10000);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(1), TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 2);
+  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(1), TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 1);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(2), TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 2);
+  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(2), TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 1);
+
+  TMC5072_FIELD_WRITE(&state, TMC5072_GCONF, TMC5072_STEPDIR1_ENABLE_MASK, TMC5072_STEPDIR1_ENABLE_SHIFT, 1);
+  TMC5072_FIELD_WRITE(&state, TMC5072_GCONF, TMC5072_STEPDIR2_ENABLE_MASK, TMC5072_STEPDIR2_ENABLE_SHIFT, 1);
+
+  state.config->state = CONFIG_RESTORE;
+
+  tmc5072_periodicJob(&state, 100);
+  // sendData(TMC5072_CHOPCONF_1,  chop);
+  // sendData(TMC5072_IHOLD_IRUN_1, ihold);
+  // sendData(TMC5072_TZEROWAIT_1, zerowait);
+  // sendData(TMC5072_PWMCONF_1, pwm);
 
 
-  sendData(TMC5072_CHOPCONF_2,  chop);
-  sendData(TMC5072_IHOLD_IRUN_2, ihold);
-  sendData(TMC5072_TZEROWAIT_2, zerowait);
-  sendData(TMC5072_PWMCONF_2, pwm);
+  // sendData(TMC5072_CHOPCONF_2,  chop);
+  // sendData(TMC5072_IHOLD_IRUN_2, ihold);
+  // sendData(TMC5072_TZEROWAIT_2, zerowait);
+  // sendData(TMC5072_PWMCONF_2, pwm);
 
-  sendData(TMC5072_GCONF, {0x0, 0x0, 0x0, 0x6});
+  // sendData(TMC5072_GCONF, {0x0, 0x0, 0x0, 0x6});
 }
 
-void sendData(byte address, Data datagram) {
-  //TMC5130 takes 40 bit data: 8 address and 32 data
+// void sendData(byte address, Data datagram) {
+//   //TMC5130 takes 40 bit data: 8 address and 32 data
 
-//  delay(100);
-  unsigned long i_datagram;
+// //  delay(100);
+//   unsigned long i_datagram;
 
-  digitalWrite(chipCS,LOW);
-  delayMicroseconds(10);
-  Serial.print(datagram.value[0], HEX);
-  Serial.print(datagram.value[1], HEX);
-  Serial.print(datagram.value[2], HEX);
-  Serial.print(datagram.value[3], HEX);
+//   digitalWrite(chipCS,LOW);
+//   delayMicroseconds(10);
+//   Serial.print(datagram.value[0], HEX);
+//   Serial.print(datagram.value[1], HEX);
+//   Serial.print(datagram.value[2], HEX);
+//   Serial.print(datagram.value[3], HEX);
 
-  SPI.transfer(address + 0x80);  
+//   SPI.transfer(address + 0x80);  
 
-  i_datagram |= SPI.transfer(datagram.value[0]);
-  i_datagram <<= 8;
-  i_datagram |= SPI.transfer(datagram.value[1]);
-  i_datagram <<= 8;
-  i_datagram |= SPI.transfer(datagram.value[2]);
-  i_datagram <<= 8;
-  i_datagram |= SPI.transfer(datagram.value[3]);
+//   i_datagram |= SPI.transfer(datagram.value[0]);
+//   i_datagram <<= 8;
+//   i_datagram |= SPI.transfer(datagram.value[1]);
+//   i_datagram <<= 8;
+//   i_datagram |= SPI.transfer(datagram.value[2]);
+//   i_datagram <<= 8;
+//   i_datagram |= SPI.transfer(datagram.value[3]);
 
-  delayMicroseconds(10);
-  digitalWrite(chipCS,HIGH);
-}
+//   delayMicroseconds(10);
+//   digitalWrite(chipCS,HIGH);
+// }
 
-void readData(unsigned long address) {
-  //TMC5130 takes 40 bit data: 8 address and 32 data
 
-//  delay(100);
-  unsigned long i_datagram;
 
-  digitalWrite(chipCS,LOW);
-//  delayMicroseconds(10);
 
-  SPI.transfer(address);
-  SPI.transfer(0); SPI.transfer(0); SPI.transfer(0); SPI.transfer(0);
-  delayMicroseconds(10);
+// void readData(unsigned long address) {
+//   //TMC5130 takes 40 bit data: 8 address and 32 data
+
+// //  delay(100);
+//   unsigned long i_datagram;
+
+//   digitalWrite(chipCS,LOW);
+// //  delayMicroseconds(10);
+
+//   SPI.transfer(address);
+//   SPI.transfer(0); SPI.transfer(0); SPI.transfer(0); SPI.transfer(0);
+//   delayMicroseconds(10);
 
   
   
-  SPI.transfer(address);
+//   SPI.transfer(address);
 
-  i_datagram |= SPI.transfer(0);
-  i_datagram <<= 8;
-  i_datagram |= SPI.transfer(0);
-  i_datagram <<= 8;
-  i_datagram |= SPI.transfer(0);
-  i_datagram <<= 8;
-  i_datagram |= SPI.transfer(0);
-  digitalWrite(chipCS,HIGH);
+//   i_datagram |= SPI.transfer(0);
+//   i_datagram <<= 8;
+//   i_datagram |= SPI.transfer(0);
+//   i_datagram <<= 8;
+//   i_datagram |= SPI.transfer(0);
+//   i_datagram <<= 8;
+//   i_datagram |= SPI.transfer(0);
+//   digitalWrite(chipCS,HIGH);
 
-//  Serial.print("Received: ");
-//  Serial.print(i_datagram,HEX);
-//  Serial.print(" from register: ");
-//  Serial.println(address,HEX);
-}
+// //  Serial.print("Received: ");
+// //  Serial.print(i_datagram,HEX);
+// //  Serial.print(" from register: ");
+// //  Serial.println(address,HEX);
+// }
 
 // Reset all movement variables
 // --------------------------------------
@@ -229,6 +297,8 @@ void loop() {
   }
 
   long curSliceTime = curTime - sliceStartTime;
+
+  tmc5072_periodicJob(&state, curSliceTime);
 
 #ifdef ENABLE_PENUP
   if (penTransitionDirection) {
