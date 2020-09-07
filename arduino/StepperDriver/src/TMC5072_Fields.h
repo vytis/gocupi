@@ -9,10 +9,10 @@
 
 #define TMC5072_SINGLE_DRIVER_MASK       0x01 // GCONF // Attention: Set correctly before driver enable!
 #define TMC5072_SINGLE_DRIVER_SHIFT      0 // min.: 0, max.: 1, default: 0
-#define TMC5072_STEPDIR1_ENABLE_MASK     0x02 // GCONF //
-#define TMC5072_STEPDIR1_ENABLE_SHIFT    1 // min.: 0, max.: 1, default: 0
-#define TMC5072_STEPDIR2_ENABLE_MASK     0x04 // GCONF //
-#define TMC5072_STEPDIR2_ENABLE_SHIFT    2 // min.: 0, max.: 1, default: 0
+#define TMC5072_STEPDIR1_ENABLE_MASK     0x02l // GCONF //
+#define TMC5072_STEPDIR1_ENABLE_SHIFT    1l // min.: 0, max.: 1, default: 0
+#define TMC5072_STEPDIR2_ENABLE_MASK     0x04l // GCONF //
+#define TMC5072_STEPDIR2_ENABLE_SHIFT    2l // min.: 0, max.: 1, default: 0
 #define TMC5072_POSCMP_ENABLE_MASK       0x08 // GCONF //
 #define TMC5072_POSCMP_ENABLE_SHIFT      3 // min.: 0, max.: 1, default: 0
 #define TMC5072_ENC1_REFSEL_MASK         0x10 // GCONF //

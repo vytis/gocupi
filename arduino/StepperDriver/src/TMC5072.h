@@ -15,19 +15,19 @@
 #include "TMC5072_Fields.h"
 
 // Helper macros
-#define TMC5072_FIELD_READ(tdef, address, mask, shift) \
-	FIELD_GET(tmc5072_readInt(tdef, address), mask, shift)
-#define TMC5072_FIELD_WRITE(tdef, address, mask, shift, value) \
-	(tmc5072_writeInt(tdef, address, FIELD_SET(tmc5072_readInt(tdef, address), mask, shift, value)))
+// #define TMC5072_FIELD_READ(tdef, address, mask, shift) \
+// 	FIELD_GET(tmc5072_readInt(tdef, address), mask, shift)
+// #define TMC5072_FIELD_WRITE(tdef, address, mask, shift, value) \
+// 	(tmc5072_writeInt(tdef, address, FIELD_SET(tmc5072_readInt(tdef, address), mask, shift, value)))
 
 // Usage note: use 1 TypeDef per IC
 typedef struct {
 	ConfigurationTypeDef *config;
-	int32_t oldX[TMC5072_MOTORS];
-	uint32_t velocity[TMC5072_MOTORS];
-	uint32_t oldTick;
-	int32_t registerResetState[TMC5072_REGISTER_COUNT];
-	uint8_t registerAccess[TMC5072_REGISTER_COUNT];
+	// int32_t oldX[TMC5072_MOTORS];
+	// uint32_t velocity[TMC5072_MOTORS];
+	// uint32_t oldTick;
+	// int32_t registerResetState[TMC5072_REGISTER_COUNT];
+	// uint8_t registerAccess[TMC5072_REGISTER_COUNT];
 } TMC5072TypeDef;
 
 typedef void (*tmc5072_callback)(TMC5072TypeDef*, ConfigState);
@@ -50,43 +50,43 @@ typedef void (*tmc5072_callback)(TMC5072TypeDef*, ConfigState);
 //   0x13: read/write, separate functions/values for reading or writing
 //   0x21: read, flag register (read to clear)
 //   0x42: write, has hardware presets on reset
-static const uint8_t tmc5072_defaultRegisterAccess[TMC5072_REGISTER_COUNT] = {
-//	0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
-	0x03, 0x01, 0x01, 0x02, 0x13, 0x02, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, // 0x00 - 0x0F
-	0x02, 0x01, ____, ____, ____, ____, ____, ____, 0x02, 0x01, ____, ____, ____, ____, ____, ____, // 0x10 - 0x1F
-	0x03, 0x03, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, ____, 0x02, 0x02, 0x02, 0x03, ____, ____, // 0x20 - 0x2F
-	0x02, 0x02, 0x02, 0x02, 0x03, 0x01, 0x01, ____, 0x03, 0x03, 0x02, 0x01, 0x01, ____, ____, ____, // 0x30 - 0x3F
-	0x03, 0x03, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, ____, 0x02, 0x02, 0x02, 0x03, ____, ____, // 0x40 - 0x4F
-	0x02, 0x02, 0x02, 0x02, 0x03, 0x01, 0x01, ____, 0x03, 0x03, 0x02, 0x01, 0x01, ____, ____, ____, // 0x50 - 0x5F
-	0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x01, 0x01, 0x03, 0x02, 0x02, 0x01, // 0x60 - 0x6F
-	____, ____, ____, ____, ____, ____, ____, ____, ____, ____, 0x01, 0x01, 0x03, 0x02, 0x02, 0x01  // 0x70 - 0x7F
-};
+// static const uint8_t tmc5072_defaultRegisterAccess[TMC5072_REGISTER_COUNT] = {
+// //	0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
+// 	0x03, 0x01, 0x01, 0x02, 0x13, 0x02, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, // 0x00 - 0x0F
+// 	0x02, 0x01, ____, ____, ____, ____, ____, ____, 0x02, 0x01, ____, ____, ____, ____, ____, ____, // 0x10 - 0x1F
+// 	0x03, 0x03, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, ____, 0x02, 0x02, 0x02, 0x03, ____, ____, // 0x20 - 0x2F
+// 	0x02, 0x02, 0x02, 0x02, 0x03, 0x01, 0x01, ____, 0x03, 0x03, 0x02, 0x01, 0x01, ____, ____, ____, // 0x30 - 0x3F
+// 	0x03, 0x03, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, ____, 0x02, 0x02, 0x02, 0x03, ____, ____, // 0x40 - 0x4F
+// 	0x02, 0x02, 0x02, 0x02, 0x03, 0x01, 0x01, ____, 0x03, 0x03, 0x02, 0x01, 0x01, ____, ____, ____, // 0x50 - 0x5F
+// 	0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x01, 0x01, 0x03, 0x02, 0x02, 0x01, // 0x60 - 0x6F
+// 	____, ____, ____, ____, ____, ____, ____, ____, ____, ____, 0x01, 0x01, 0x03, 0x02, 0x02, 0x01  // 0x70 - 0x7F
+// };
 
-static const int32_t tmc5072_defaultRegisterResetState[TMC5072_REGISTER_COUNT] = {
-//	0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
-	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x00 - 0x0F
-	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x10 - 0x1F
-	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x20 - 0x2F
-	R30, 0,   R32, 0,   0,   0,   0,   0,   0,   0,   R3A, 0,   0,   0,   0,   0, // 0x30 - 0x3F
-	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x40 - 0x4F
-	R50, 0,   R52, 0,   0,   0,   0,   0,   0,   0,   R5A, 0,   0,   0,   0,   0, // 0x50 - 0x5F
-	N_A, N_A, N_A, N_A, N_A, N_A, N_A, N_A, N_A, N_A, 0,   0,   R6C, 0,   0,   0, // 0x60 - 0x6F
-	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   R7C, 0,   0,   0  // 0x70 - 0x7F
-};
+// static const int32_t tmc5072_defaultRegisterResetState[TMC5072_REGISTER_COUNT] = {
+// //	0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
+// 	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x00 - 0x0F
+// 	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x10 - 0x1F
+// 	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x20 - 0x2F
+// 	R30, 0,   R32, 0,   0,   0,   0,   0,   0,   0,   R3A, 0,   0,   0,   0,   0, // 0x30 - 0x3F
+// 	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // 0x40 - 0x4F
+// 	R50, 0,   R52, 0,   0,   0,   0,   0,   0,   0,   R5A, 0,   0,   0,   0,   0, // 0x50 - 0x5F
+// 	N_A, N_A, N_A, N_A, N_A, N_A, N_A, N_A, N_A, N_A, 0,   0,   R6C, 0,   0,   0, // 0x60 - 0x6F
+// 	0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   R7C, 0,   0,   0  // 0x70 - 0x7F
+// };
 
-static const TMCRegisterConstant tmc5072_RegisterConstants[] =
-{		// Use ascending addresses!
-		{ 0x60, 0xAAAAB554 }, // MSLUT[0]
-		{ 0x61, 0x4A9554AA }, // MSLUT[1]
-		{ 0x62, 0x24492929 }, // MSLUT[2]
-		{ 0x63, 0x10104222 }, // MSLUT[3]
-		{ 0x64, 0xFBFFFFFF }, // MSLUT[4]
-		{ 0x65, 0xB5BB777D }, // MSLUT[5]
-		{ 0x66, 0x49295556 }, // MSLUT[6]
-		{ 0x67, 0x00404222 }, // MSLUT[7]
-		{ 0x68, 0xFFFF8056 }, // MSLUTSEL
-		{ 0x69, 0x00F70000 }  // MSLUTSTART
-};
+// static const TMCRegisterConstant tmc5072_RegisterConstants[] =
+// {		// Use ascending addresses!
+// 		{ 0x60, 0xAAAAB554 }, // MSLUT[0]
+// 		{ 0x61, 0x4A9554AA }, // MSLUT[1]
+// 		{ 0x62, 0x24492929 }, // MSLUT[2]
+// 		{ 0x63, 0x10104222 }, // MSLUT[3]
+// 		{ 0x64, 0xFBFFFFFF }, // MSLUT[4]
+// 		{ 0x65, 0xB5BB777D }, // MSLUT[5]
+// 		{ 0x66, 0x49295556 }, // MSLUT[6]
+// 		{ 0x67, 0x00404222 }, // MSLUT[7]
+// 		{ 0x68, 0xFFFF8056 }, // MSLUTSEL
+// 		{ 0x69, 0x00F70000 }  // MSLUTSTART
+// };
 
 #undef R30
 #undef R32
@@ -97,9 +97,9 @@ static const TMCRegisterConstant tmc5072_RegisterConstants[] =
 #undef R6C
 #undef R7C
 
-// void tmc5072_writeDatagram(TMC5072TypeDef *tmc5072, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
-// void tmc5072_writeInt(TMC5072TypeDef *tmc5072, uint8_t address, int32_t value);
-// int32_t tmc5072_readInt(TMC5072TypeDef *tmc5072, uint8_t address);
+void tmc5072_writeDatagram(TMC5072TypeDef *tmc5072, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
+void tmc5072_writeInt(TMC5072TypeDef *tmc5072, uint8_t address, int32_t value);
+int32_t tmc5072_readInt(TMC5072TypeDef *tmc5072, uint8_t address);
 
 // void tmc5072_init(TMC5072TypeDef *tmc5072, uint8_t channel, ConfigurationTypeDef *tmc5072_config, const int32_t *registerResetState);
 // void tmc5072_fillShadowRegisters(TMC5072TypeDef *tmc5072); // For constant registers with hardware preset we cant determine actual value

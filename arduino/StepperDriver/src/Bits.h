@@ -66,10 +66,10 @@
 #define WORD1_MASK    (SHORT2_MASK|SHORT3_MASK)
 #define WORD1_SHIFT   SHORT2_SHIFT
 
-#define NIBBLE(value, n)  (((value) >> ((n) << 2)) & 0x0F)
-#define BYTE(value, n)    (((value) >> ((n) << 3)) & 0xFF)
-#define SHORT(value, n)   (((value) >> ((n) << 4)) & 0xFFFF)
-#define WORD(value, n)    (((value) >> ((n) << 5)) & 0xFFFFFFFF)
+#define NIBBLE(value, n)  (((value) >> ((n) << 2L)) & 0x0FL)
+#define BYTE(value, n)    (((value) >> ((n) << 3L)) & 0xFFL)
+#define SHORT(value, n)   (((value) >> ((n) << 4L)) & 0xFFFFL)
+#define WORD(value, n)    (((value) >> ((n) << 5L)) & 0xFFFFFFFFL)
 
 #define _8_16(__1, __0)                                (((__1) << BYTE1_SHIFT) | ((__0) << BYTE0_SHIFT))
 

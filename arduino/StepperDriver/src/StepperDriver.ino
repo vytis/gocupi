@@ -3,8 +3,14 @@
   Reads movement commands over serial and controls two stepper motors 
 */
 #include <SPI.h>
+#include <stdint.h>
 #include "TMC_API.h"
 #include "TMC5072.h"
+
+// #define TMC5072_FIELD_READ(buffer, address, mask, shift) \
+// 	FIELD_GET(tmc5072_readInt(address), mask, shift)
+// #define TMC5072_FIELD_WRITE(buffer, address, mask, shift, value) \
+// 	(tmc5072_writeInt(buffer, address, FIELD_SET(tmc5072_readInt(address), mask, shift, value)))
 
 
 // comment out to disable PENUP support
@@ -70,6 +76,8 @@ unsigned long sliceStartTime; // start of current slice in microseconds
 // typedef ConfigurationTypeDef Config;
 
 // TMC5072TypeDef state = {0};
+
+uint8_t buffer[4];
 
 void tmc5072_readWriteArray(uint8_t channel, uint8_t *data, size_t length) {
   //TMC5130 takes 40 bit data: 8 address and 32 data
@@ -142,7 +150,7 @@ void setup() {
 
 void setupMotors() 
 {
-  // tmc5072_init(&state, 0, state.config, tmc5072_defaultRegisterResetState);
+  // tmc5072_init(buffer, 0, state.config, tmc5072_defaultRegisterResetState);
 
 
   const unsigned long MSTEPS_256 = 0x0;
@@ -162,55 +170,41 @@ void setupMotors()
   
   // m1 to step/dir
 
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 4);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 1);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 2);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(1), TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 5);
+  int32_t chop = 0;
+  FIELD_SET(chop, TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5l);
+  FIELD_SET(chop, TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 4l);
+  FIELD_SET(chop, TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 1l);
+  FIELD_SET(chop, TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0l);
+  FIELD_SET(chop, TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 2l);
+  FIELD_SET(chop, TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 5l);
 
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 4);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 1);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 2);
-  TMC5072_FIELD_WRITE(&state, TMC5072_CHOPCONF(2), TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 5);
+  int32_t ihold = 0;
+  FIELD_SET(ihold, TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 5);
+  FIELD_SET(ihold, TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 31);
+  FIELD_SET(ihold, TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 6);
 
-  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(1), TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 5);
-  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(1), TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 31);
-  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(1), TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 6);
+  int32_t zerowait = 0;
+  FIELD_SET(zerowait, TMC5072_TZEROWAIT_MASK, TMC5072_TZEROWAIT_SHIFT, 10000);
 
-  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(2), TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 5);
-  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(2), TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 31);
-  TMC5072_FIELD_WRITE(&state, TMC5072_IHOLD_IRUN(2), TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 6);
-
-  TMC5072_FIELD_WRITE(&state, TMC5072_TZEROWAIT(1), TMC5072_TZEROWAIT_MASK, TMC5072_TZEROWAIT_SHIFT, 10000);
-  TMC5072_FIELD_WRITE(&state, TMC5072_TZEROWAIT(2), TMC5072_TZEROWAIT_MASK, TMC5072_TZEROWAIT_SHIFT, 10000);
-
-  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(1), TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 2);
-  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(1), TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 1);
-
-  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(2), TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 2);
-  TMC5072_FIELD_WRITE(&state, TMC5072_PWMCONF(2), TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 1);
-
-  TMC5072_FIELD_WRITE(&state, TMC5072_GCONF, TMC5072_STEPDIR1_ENABLE_MASK, TMC5072_STEPDIR1_ENABLE_SHIFT, 1);
-  TMC5072_FIELD_WRITE(&state, TMC5072_GCONF, TMC5072_STEPDIR2_ENABLE_MASK, TMC5072_STEPDIR2_ENABLE_SHIFT, 1);
-
-  state.config->state = CONFIG_RESTORE;
-
-  tmc5072_periodicJob(&state, 100);
-  // sendData(TMC5072_CHOPCONF_1,  chop);
-  // sendData(TMC5072_IHOLD_IRUN_1, ihold);
-  // sendData(TMC5072_TZEROWAIT_1, zerowait);
-  // sendData(TMC5072_PWMCONF_1, pwm);
+  int32_t pwmconf = 0;
+  FIELD_SET(pwmconf, TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 2);
+  FIELD_SET(pwmconf, TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 1);
 
 
-  // sendData(TMC5072_CHOPCONF_2,  chop);
-  // sendData(TMC5072_IHOLD_IRUN_2, ihold);
-  // sendData(TMC5072_TZEROWAIT_2, zerowait);
-  // sendData(TMC5072_PWMCONF_2, pwm);
 
-  // sendData(TMC5072_GCONF, {0x0, 0x0, 0x0, 0x6});
+
+  // uint8_t gconf[4] = {0x00, 0x00, 0x0, 0x0};
+  int32_t gconf = 0;
+  FIELD_SET(gconf, TMC5072_STEPDIR1_ENABLE_MASK, TMC5072_STEPDIR1_ENABLE_SHIFT, 1l);
+  FIELD_SET(gconf, TMC5072_STEPDIR2_ENABLE_MASK, TMC5072_STEPDIR2_ENABLE_SHIFT, 1l);
+  tmc5072_writeInt(TMC5072_GCONF, gconf);
+
+  for (size_t i = 0; i < 2; i++) {
+    tmc5072_writeInt(TMC5072_CHOPCONF(i), chop);
+    tmc5072_writeInt(TMC5072_IHOLD_IRUN(i), ihold);
+    tmc5072_writeInt(TMC5072_TZEROWAIT(i), zerowait);
+    tmc5072_writeInt(TMC5072_PWMCONF(i), pwmconf);
+  }
 }
 
 // void sendData(byte address, Data datagram) {
@@ -297,8 +291,6 @@ void loop() {
   }
 
   long curSliceTime = curTime - sliceStartTime;
-
-  tmc5072_periodicJob(&state, curSliceTime);
 
 #ifdef ENABLE_PENUP
   if (penTransitionDirection) {
@@ -554,4 +546,43 @@ void RequestMoreSerialMoveData() {
   Serial.write(128);
   moveDataRequestPending = 128;
   UpdateReceiveLed(true);
+}
+
+
+// ----------------
+int32_t tmc5072_writeDatagram(uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4)
+{
+	uint8_t data[5] = { address | TMC5072_WRITE_BIT, x1, x2, x3, x4 };
+	tmc5072_readWriteArray(0, &data[0], 5);
+
+	int32_t value = ((uint32_t)x1 << 24) | ((uint32_t)x2 << 16) | (x3 << 8) | x4;
+  return value;
+	// Write to the shadow register and mark the register dirty
+	// address = TMC_ADDRESS(address);
+	// tmc5072->config->shadowRegister[address] = value;
+	// tmc5072->registerAccess[address] |= TMC_ACCESS_DIRTY;
+}
+
+void tmc5072_writeInt(uint8_t address, int32_t value)
+{
+	tmc5072_writeDatagram(address, BYTE(value, 3), BYTE(value, 2), BYTE(value, 1), BYTE(value, 0));
+}
+
+int32_t tmc5072_readInt(uint8_t address)
+{
+	address = TMC_ADDRESS(address);
+
+	// register not readable -> shadow register copy
+	// if(!TMC_IS_READABLE(tmc5072->registerAccess[address]))
+	// 	return tmc5072->config->shadowRegister[address];
+
+	uint8_t data[5] = { 0, 0, 0, 0, 0 };
+
+	data[0] = address;
+	tmc5072_readWriteArray(0, &data[0], 5);
+
+	data[0] = address;
+	tmc5072_readWriteArray(0, &data[0], 5);
+
+	return ((uint32_t)data[1] << 24) | ((uint32_t)data[2] << 16) | (data[3] << 8) | data[4];
 }
