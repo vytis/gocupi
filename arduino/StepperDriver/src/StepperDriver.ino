@@ -152,35 +152,25 @@ void setupMotors()
 {
   // tmc5072_init(buffer, 0, state.config, tmc5072_defaultRegisterResetState);
 
-
-  const unsigned long MSTEPS_256 = 0x0;
-  const unsigned long MSTEPS_128 = 0x1;
-  const unsigned long MSTEPS_64  = 0x2;
-  const unsigned long MSTEPS_32  = 0x3;
-  const unsigned long MSTEPS_16  = 0x4;
-  const unsigned long MSTEPS_8   = 0x5;
-  const unsigned long MSTEPS_4   = 0x6;
-  const unsigned long MSTEPS_2   = 0x7;
-  const unsigned long MSTEPS_1   = 0x8;
-
-  // const Data chop = {0x10 + MSTEPS_16, 0x1, 0x0, 0xC5};
-  // const Data ihold = {0x0, 0x06, 0x1F, 0x0};
-  // const Data zerowait = {0x0, 0x0, 0x27, 0x10};
-  // const Data pwm = {0x01, 0x20, 0x0, 0x0};
   
-  // m1 to step/dir
+
+  int32_t gconf = 0;
+  FIELD_SET(gconf, TMC5072_STEPDIR1_ENABLE_MASK, TMC5072_STEPDIR1_ENABLE_SHIFT, 1l);
+  FIELD_SET(gconf, TMC5072_STEPDIR2_ENABLE_MASK, TMC5072_STEPDIR2_ENABLE_SHIFT, 1l);
+  tmc5072_writeInt(TMC5072_GCONF, gconf);
 
   int32_t chop = 0;
   FIELD_SET(chop, TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5l);
-  FIELD_SET(chop, TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 4l);
-  FIELD_SET(chop, TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 1l);
+  FIELD_SET(chop, TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 0l);
+  FIELD_SET(chop, TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 13l);
   FIELD_SET(chop, TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0l);
-  FIELD_SET(chop, TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 2l);
-  FIELD_SET(chop, TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 5l);
+  FIELD_SET(chop, TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT, 1l);
+  FIELD_SET(chop, TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 1l);
+  FIELD_SET(chop, TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 6l);
 
   int32_t ihold = 0;
-  FIELD_SET(ihold, TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 5);
-  FIELD_SET(ihold, TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 31);
+  FIELD_SET(ihold, TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 1);
+  FIELD_SET(ihold, TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 20);
   FIELD_SET(ihold, TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 6);
 
   int32_t zerowait = 0;
@@ -188,16 +178,7 @@ void setupMotors()
 
   int32_t pwmconf = 0;
   FIELD_SET(pwmconf, TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 2);
-  FIELD_SET(pwmconf, TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 1);
-
-
-
-
-  // uint8_t gconf[4] = {0x00, 0x00, 0x0, 0x0};
-  int32_t gconf = 0;
-  FIELD_SET(gconf, TMC5072_STEPDIR1_ENABLE_MASK, TMC5072_STEPDIR1_ENABLE_SHIFT, 1l);
-  FIELD_SET(gconf, TMC5072_STEPDIR2_ENABLE_MASK, TMC5072_STEPDIR2_ENABLE_SHIFT, 1l);
-  tmc5072_writeInt(TMC5072_GCONF, gconf);
+  FIELD_SET(pwmconf, TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 0);
 
   for (size_t i = 0; i < 2; i++) {
     tmc5072_writeInt(TMC5072_CHOPCONF(i), chop);
