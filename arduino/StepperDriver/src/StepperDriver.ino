@@ -79,6 +79,24 @@ unsigned long sliceStartTime; // start of current slice in microseconds
 
 uint8_t buffer[4];
 
+uint32_t gconf = 0;
+uint32_t chop = 0;
+uint32_t ihold = 0;
+uint32_t zerowait = 0;
+uint32_t pwmconf = 0;
+uint32_t ramp = 0;
+uint32_t vhigh = 0;
+uint32_t vcool = 0;
+
+uint32_t a1 = 0;
+uint32_t v1 = 0;
+uint32_t amax = 0;
+uint32_t vmax = 0;
+uint32_t dmax = 0;
+uint32_t d1 = 0;
+uint32_t vstop = 0;
+uint32_t xtarget = 0;
+
 void tmc5072_readWriteArray(uint8_t channel, uint8_t *data, size_t length) {
   //TMC5130 takes 40 bit data: 8 address and 32 data
   digitalWrite(chipCS,LOW);
@@ -102,6 +120,12 @@ void tmc5072_readWriteArray(uint8_t channel, uint8_t *data, size_t length) {
   digitalWrite(chipCS,HIGH);
 }
 
+void interrupt() {
+    int32_t stat = tmc5072_readInt(TMC5072_RAMPSTAT(0));
+    FIELD_SET(xtarget, TMC5072_VSTOP_MASK, TMC5072_VSTOP_SHIFT, 51200);
+    updatePos();
+}
+
 // setup
 // --------------------------------------
 void setup() {
@@ -109,42 +133,80 @@ void setup() {
   Serial.setTimeout(0);
 
   pinMode(chipCS,OUTPUT);
-  pinMode(MOTOR_ENABLE,OUTPUT);
+  pinMode(MOTOR_ENABLE, OUTPUT);
+  digitalWrite(MOTOR_ENABLE,LOW);
   digitalWrite(chipCS,HIGH);
-  digitalWrite(MOTOR_ENABLE,HIGH);
+
+  // digitalWrite(MOTOR_ENABLE,HIGH);
 
   SPI.setBitOrder(MSBFIRST);
-  SPI.setClockDivider(SPI_CLOCK_DIV32);
+  // SPI.setClockDivider(SPI_CLOCK_DIV32);
   SPI.setDataMode(SPI_MODE3);
   SPI.begin();
 
   setupMotors();
+  attachInterrupt(digitalPinToInterrupt(INT_PIN), interrupt, FALLING); 
 
-  // setup pins
-  for(int ledIndex = 0; ledIndex < LED_PINS_COUNT; ledIndex++) {
-    pinMode(LED_PINS[ledIndex], OUTPUT);
-    digitalWrite(LED_PINS[ledIndex], HIGH);
-  }	
-  pinMode(LEFT_STEP_PIN, OUTPUT);
-  pinMode(LEFT_DIR_PIN, OUTPUT);
-  pinMode(RIGHT_STEP_PIN, OUTPUT);
-  pinMode(RIGHT_DIR_PIN, OUTPUT);	
 
-#ifdef ENABLE_PENUP
-  penUpServo.attach(PENUP_SERVO_PIN);
-  penUpServo.write(PENUP_ANGLE);
-  delay(1000);
-  penUpServo.write(PENDOWN_ANGLE);
-  delay(1000);
-  penUpServo.write(PENUP_ANGLE);
-#endif  
+//   // setup pins
+//   for(int ledIndex = 0; ledIndex < LED_PINS_COUNT; ledIndex++) {
+//     pinMode(LED_PINS[ledIndex], OUTPUT);
+//     digitalWrite(LED_PINS[ledIndex], HIGH);
+//   }	
+//   pinMode(LEFT_STEP_PIN, OUTPUT);
+//   pinMode(LEFT_DIR_PIN, OUTPUT);
+//   pinMode(RIGHT_STEP_PIN, OUTPUT);
+//   pinMode(RIGHT_DIR_PIN, OUTPUT);	
 
-  ResetMovementVariables();
+// #ifdef ENABLE_PENUP
+//   penUpServo.attach(PENUP_SERVO_PIN);
+//   penUpServo.write(PENUP_ANGLE);
+//   delay(1000);
+//   penUpServo.write(PENDOWN_ANGLE);
+//   delay(1000);
+//   penUpServo.write(PENUP_ANGLE);
+// #endif  
 
-  delay(500);
-  UpdateReceiveLed(false);
-  UpdateStatusLeds(0);
-  digitalWrite(MOTOR_ENABLE,LOW);
+//   ResetMovementVariables();
+
+//   delay(500);
+//   UpdateReceiveLed(false);
+//   UpdateStatusLeds(0);
+
+
+
+}
+
+
+
+void updateValues() 
+{
+  tmc5072_writeInt(TMC5072_GCONF, gconf);
+
+  for (size_t i = 0; i < 1; i++) {
+    tmc5072_writeInt(TMC5072_CHOPCONF(i), chop);
+    tmc5072_writeInt(TMC5072_IHOLD_IRUN(i), ihold);
+    // tmc5072_writeInt(TMC5072_TZEROWAIT(i), zerowait);
+    tmc5072_writeInt(TMC5072_PWMCONF(i), pwmconf);
+    tmc5072_writeInt(TMC5072_VHIGH(i), vhigh);
+    tmc5072_writeInt(TMC5072_VCOOLTHRS(i), vcool);
+  }
+  updatePos();
+}
+
+void updatePos()
+{
+    for (size_t i = 0; i < 1; i++) {
+    tmc5072_writeInt(TMC5072_A1(i), a1);
+    tmc5072_writeInt(TMC5072_V1(i), v1);
+    tmc5072_writeInt(TMC5072_AMAX(i), amax);
+    tmc5072_writeInt(TMC5072_VMAX(i), vmax);
+    tmc5072_writeInt(TMC5072_DMAX(i), dmax);
+    tmc5072_writeInt(TMC5072_D1(i), d1);
+    tmc5072_writeInt(TMC5072_VSTOP(i), vstop);
+    tmc5072_writeInt(TMC5072_RAMPMODE(i), ramp);
+    tmc5072_writeInt(TMC5072_XTARGET(i), xtarget);
+  }
 
 }
 
@@ -154,38 +216,45 @@ void setupMotors()
 
   
 
-  int32_t gconf = 0;
-  FIELD_SET(gconf, TMC5072_STEPDIR1_ENABLE_MASK, TMC5072_STEPDIR1_ENABLE_SHIFT, 1l);
-  FIELD_SET(gconf, TMC5072_STEPDIR2_ENABLE_MASK, TMC5072_STEPDIR2_ENABLE_SHIFT, 1l);
-  tmc5072_writeInt(TMC5072_GCONF, gconf);
+  FIELD_SET(gconf, TMC5072_POSCMP_ENABLE_MASK, TMC5072_POSCMP_ENABLE_SHIFT, 1l);
+  // FIELD_SET(gconf, TMC5072_STEPDIR1_ENABLE_MASK, TMC5072_STEPDIR1_ENABLE_SHIFT, 1l);
+  // FIELD_SET(gconf, TMC5072_STEPDIR2_ENABLE_MASK, TMC5072_STEPDIR2_ENABLE_SHIFT, 1l);
 
-  int32_t chop = 0;
   FIELD_SET(chop, TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5l);
-  FIELD_SET(chop, TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 0l);
-  FIELD_SET(chop, TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 13l);
+  FIELD_SET(chop, TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 4l);
+  FIELD_SET(chop, TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 1l);
+  // FIELD_SET(chop, TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT, 1l);
+  FIELD_SET(chop, TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 2l);
   FIELD_SET(chop, TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0l);
-  FIELD_SET(chop, TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT, 1l);
-  FIELD_SET(chop, TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 1l);
-  FIELD_SET(chop, TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 6l);
+  // FIELD_SET(chop, TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 6l);
 
-  int32_t ihold = 0;
-  FIELD_SET(ihold, TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 1);
-  FIELD_SET(ihold, TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 20);
-  FIELD_SET(ihold, TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 6);
+  FIELD_SET(ihold, TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, 5);
+  FIELD_SET(ihold, TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, 31);
+  FIELD_SET(ihold, TMC5072_IHOLDDELAY_MASK, TMC5072_IHOLDDELAY_SHIFT, 1);
 
-  int32_t zerowait = 0;
-  FIELD_SET(zerowait, TMC5072_TZEROWAIT_MASK, TMC5072_TZEROWAIT_SHIFT, 10000);
+  // FIELD_SET(zerowait, TMC5072_TZEROWAIT_MASK, TMC5072_TZEROWAIT_SHIFT, 10000);
 
-  int32_t pwmconf = 0;
-  FIELD_SET(pwmconf, TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 2);
-  FIELD_SET(pwmconf, TMC5072_FREEWHEEL_MASK, TMC5072_FREEWHEEL_SHIFT, 0);
+  FIELD_SET(pwmconf, TMC5072_PWM_AUTOSCALE_MASK, TMC5072_PWM_AUTOSCALE_SHIFT, 1);
+  FIELD_SET(pwmconf, TMC5072_PWM_FREQ_MASK, TMC5072_PWM_FREQ_SHIFT, 0);
+  FIELD_SET(pwmconf, TMC5072_PWM_GRAD_MASK, TMC5072_PWM_GRAD_SHIFT, 1);
+  FIELD_SET(pwmconf, TMC5072_PWM_AMPL_MASK, TMC5072_PWM_AMPL_SHIFT, 200);
 
-  for (size_t i = 0; i < 2; i++) {
-    tmc5072_writeInt(TMC5072_CHOPCONF(i), chop);
-    tmc5072_writeInt(TMC5072_IHOLD_IRUN(i), ihold);
-    tmc5072_writeInt(TMC5072_TZEROWAIT(i), zerowait);
-    tmc5072_writeInt(TMC5072_PWMCONF(i), pwmconf);
-  }
+  FIELD_SET(vhigh, TMC5072_VHIGH_MASK, TMC5072_VHIGH_SHIFT, 400000);
+  FIELD_SET(vcool, TMC5072_VCOOLTHRS_MASK, TMC5072_VCOOLTHRS_SHIFT, 30000);
+  
+  FIELD_SET(ramp, TMC5072_RAMPMODE_MASK, TMC5072_RAMPMODE_SHIFT, TMC5072_MODE_POSITION);
+
+  FIELD_SET(a1, TMC5072_A1_MASK, TMC5072_A1_SHIFT, 1000);
+  FIELD_SET(v1, TMC5072_V1_MASK, TMC5072_V1_SHIFT, 50000);
+  FIELD_SET(vmax, TMC5072_VMAX_MASK, TMC5072_VMAX_SHIFT, 20000);
+  FIELD_SET(amax, TMC5072_AMAX_MASK, TMC5072_AMAX_SHIFT, 5000);
+  FIELD_SET(dmax, TMC5072_DMAX_MASK, TMC5072_DMAX_SHIFT, 700);
+  FIELD_SET(d1, TMC5072_D1_MASK, TMC5072_D1_SHIFT, 1400);
+  FIELD_SET(vstop, TMC5072_VSTOP_MASK, TMC5072_VSTOP_SHIFT, 10);
+
+  FIELD_SET(xtarget, TMC5072_XTARGET_MASK, TMC5072_XTARGET_SHIFT, 10000);
+
+  updateValues();
 }
 
 // void sendData(byte address, Data datagram) {
@@ -265,7 +334,53 @@ void ResetMovementVariables()
 
 // Main execution loop
 // --------------------------------------
+
+
+typedef enum {
+    HSTART = 0,
+    HEND = 1,
+    TOFF = 2,
+    VELOCITY = 50,
+} Command;
+
+void loops() {
+    if(Serial.available()) {
+      char command = Serial.read();
+      char value = Serial.read();
+
+      switch (command) {
+        case HSTART:
+          FIELD_SET(chop, TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, value); break;
+        case HEND:
+          FIELD_SET(chop, TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, value); break;
+        case TOFF:
+          FIELD_SET(chop, TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, value); break;
+        case VELOCITY:
+          FIELD_SET(ramp, TMC5072_RAMPMODE_MASK, TMC5072_RAMPMODE_SHIFT, (value >= 0) ? TMC5072_MODE_VELPOS : TMC5072_MODE_VELNEG);
+          FIELD_SET(vmax, TMC5072_VMAX_MASK, TMC5072_VMAX_SHIFT, abs(value)); break;
+      }
+      updateValues();
+    }
+
+  //     FIELD_SET(chop, TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, 5l);
+  // FIELD_SET(chop, TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, 0l);
+  // FIELD_SET(chop, TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, 2l);
+  // FIELD_SET(chop, TMC5072_CHM_MASK, TMC5072_CHM_SHIFT, 0l);
+  // FIELD_SET(chop, TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT, 1l);
+  // FIELD_SET(chop, TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, 1l);
+  // FIELD_SET(chop, TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, 6l);
+
+
+}
+
 void loop() {
+    int32_t position = tmc5072_readInt(TMC5072_XACTUAL(0));
+    Serial.print("Pos: ");
+    Serial.println(position);
+    delay(500);
+}
+
+void _loop() {
   curTime = micros();
   if (curTime < sliceStartTime) { // protect against 70 minute overflow
     sliceStartTime = 0;

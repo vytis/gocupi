@@ -30,7 +30,7 @@
 #define FIELD_GET(data, mask, shift) \
 	(((data) & (mask)) >> (shift))
 #define FIELD_SET(data, mask, shift, value) \
-	data = ((((uint32_t)data) & (~((uint32_t)mask))) | ((((uint32_t)value) << ((uint32_t)shift)) & ((uint32_t)mask)));
+	data = ((((int32_t)data) & (~((uint32_t)mask))) | ((((int32_t)value) << ((uint32_t)shift)) & ((uint32_t)mask)));
 
 // Register read/write/update macros using Mask/Shift:
 #define FIELD_READ(read, motor, address, mask, shift) \
