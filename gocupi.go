@@ -4,12 +4,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	. "github.com/vytis/gocupi/polargraph"
-	"github.com/qpliu/qrencode-go/qrencode"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/qpliu/qrencode-go/qrencode"
+	. "github.com/vytis/gocupi/polargraph"
 )
 
 // set flag usage variable so that entire help will be output
@@ -186,7 +187,7 @@ func main() {
 		cutOff := params[3]
 
 		fmt.Println("Reading stipples from voronoi_stipller")
-		circles := make([]Circle, 0);//Disabled for now
+		circles := make([]Circle, 0) //Disabled for now
 		//fmt.Println("parsed data:",data)
 
 		fmt.Println("Generating meander")
@@ -468,17 +469,26 @@ func main() {
 	fmt.Printf("MaxSpeed: %.3f mm/s Accel: %.3f mm/s^2", Settings.MaxSpeed_MM_S, Settings.Acceleration_MM_S2)
 	fmt.Println()
 
-	stepData := make(chan int8, 1024)
-	go GenerateSteps(plotCoords, stepData)
-	switch {
-	case *countFlag:
-		CountSteps(stepData)
-	case *toFileFlag:
-		WriteStepsToFile(stepData)
-	case *toChartFlag:
-		WriteStepsToChart(stepData)
-	default:
-		WriteStepsToSerial(stepData, *pauseOnPenUp)
+	commands := make(chan uint8, 1024)
+	go GenerateCommands(plotCoords, commands)
+	PrintCommands(commands)
+	// stepData := make(chan int8, 1024)
+	// go GenerateSteps(plotCoords, stepData)
+	// switch {
+	// case *countFlag:
+	// 	CountSteps(stepData)
+	// case *toFileFlag:
+	// 	WriteStepsToFile(stepData)
+	// case *toChartFlag:
+	// 	WriteStepsToChart(stepData)
+	// default:
+	// 	WriteStepsToSerial(stepData, *pauseOnPenUp)
+	// }
+}
+
+func PrintCommands(commands <-chan uint8) {
+	for value := range commands {
+		fmt.Println("%x", value)
 	}
 }
 

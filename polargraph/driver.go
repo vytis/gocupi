@@ -4,8 +4,11 @@ package polargraph
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"os"
 	"strings"
@@ -24,7 +27,214 @@ func OutputCoords(plotCoords <-chan Coordinate) {
 	fmt.Println("Done plotting")
 }
 
-// Takes in coordinates and outputs stepData
+// Feedback is what controller sends back
+type Feedback struct {
+	xActual int32
+}
+
+type command uint8
+
+const (
+	enableMotors         command = iota
+	disableMotors        command = iota
+	penPosition          command = iota
+	trapezoidalRampLeft  command = iota
+	trapezoidalRampRight command = iota
+)
+
+type motor uint8
+
+const (
+	left  = iota
+	right = iota
+)
+
+// PenPosition sets the servo motor to certain angle
+type PenPosition struct {
+	angle uint8
+}
+
+// PenUp position for raised pen
+func PenUp() PenPosition {
+	return PenPosition{60}
+}
+
+// PenDown position for lowered pen
+func PenDown() PenPosition {
+	return PenPosition{160}
+}
+
+// RampParameters is used in velocity mode
+type RampParameters struct {
+	positiveDirection bool   // true - going forward
+	aMax              uint16 // Second acceleration between V1 and VMAX
+	vMax              uint32 // Motion ramp target velocity in velocity mode
+	duration          uint32 // Time it takes to complete the movement in microseconds
+}
+
+func (data TrapezoidRamp) Ramp() RampParameters {
+	var direction = data.directionForward
+	var maxSpeed = math.Pow(2, 23) - 512
+	var speedInSteps = math.Min(math.Abs(data.exitSpeed)/Settings.StepSize_MM, maxSpeed)
+
+	var maxAcceleration = math.Pow(2, 16) - 1
+	var accelerationInSteps = math.Min(math.Abs(data.acceleration)/Settings.StepSize_MM, maxAcceleration)
+
+	var time = data.time * 1000 * 1000 // convert to microseconds
+	return RampParameters{
+		positiveDirection: direction,
+		aMax:              uint16(accelerationInSteps),
+		vMax:              uint32(speedInSteps),
+		duration:          uint32(time),
+	}
+}
+
+// func (data TrapezoidInterpolater) LeftRamp() RampParameters {
+// 	var direction = data.directionForward
+// 	var maxSpeed = math.Pow(2, 23) - 512
+// 	var speedInSteps = math.Min(math.Abs(data.exitSpeed)/Settings.StepSize_MM, maxSpeed)
+
+// 	var maxAcceleration = math.Pow(2, 16) - 1
+// 	var accelerationInSteps = math.Min(math.Abs(data.acceleration)/Settings.StepSize_MM, maxAcceleration)
+
+// 	var time = data.time * 1000 * 1000 // convert to microseconds
+// 	return RampParameters{
+// 		positiveDirection: direction,
+// 		aMax:              uint16(accelerationInSteps),
+// 		vMax:              uint32(speedInSteps),
+// 		duration:          uint32(time),
+// 	}
+// }
+
+// Ramp calculates the ramp parameters for the coordinate
+// func (previousRamp TrapezoidalRamp, previousCoordinate Coordinate, nextCoordinate Coordinate) Ramps() TrapezoidalRamp {
+
+// 	var direction = interp.exitSpeed > 0
+// 	var maxSpeed = math.Pow(2, 23) - 512
+// 	var speedInSteps = math.Min(math.Abs(interp.exitSpeed)/Settings.StepSize_MM, maxSpeed)
+
+// 	var maxAcceleration = math.Pow(2, 16) - 1
+// 	var accelerationInSteps = math.Min(math.Abs(interp.acceleration)/Settings.StepSize_MM, maxAcceleration)
+
+// 	var time = interp.time * 1000 * 1000 // convert to microseconds
+// 	return TrapezoidalRamp{
+// 		positiveDirection: direction,
+// 		aMax:              uint16(accelerationInSteps),
+// 		vMax:              uint32(speedInSteps),
+// 		duration:          uint32(time),
+// 	}
+// }
+
+// FullRamp is used in position mode
+type FullRamp struct {
+	// Velocity mode
+	aMax uint16 // Second acceleration between V1 and VMAX
+	vMax uint32 // Motion ramp target velocity in velocity mode
+	// Position mode
+	xTarget          int32  // Target position for position mode
+	vStart           uint32 // Motor start velocity
+	a1               uint16 // First acceleration between VSTART and V1
+	v1               uint32 // First acceleration / deceleration phase threshold velocity
+	dMax             uint16 // Deceleration between VMAX and V1
+	d1               uint16 // Deceleration between V1 and VSTOP
+	vStop            uint32 // Motor stop velocity
+	maxDeceleration  float64
+	stopDeceleration float64
+	maxBow           float64 // 0 in trapezoid mode
+}
+
+func sendRamp(commands chan<- uint8, motor motor, ramp RampParameters) {
+	var values bytes.Buffer
+	enc := gob.NewEncoder(&values)
+	err := enc.Encode(ramp)
+	if err != nil {
+		log.Fatal("encode error:", err)
+	}
+	switch motor {
+	case left:
+		commands <- uint8(trapezoidalRampLeft)
+		break
+	case right:
+		return
+		commands <- uint8(trapezoidalRampRight)
+		break
+	}
+
+	for i := 0; i < values.Len(); i++ {
+		var value, err = values.ReadByte()
+		if err != nil {
+			break
+		}
+		commands <- value
+	}
+}
+
+// GenerateCommands Takes in coordinates and outputs commands
+func GenerateCommands(plotCoords <-chan Coordinate, commands chan<- uint8) {
+	defer close(commands)
+	polarSystem := PolarSystemFromSettings()
+	previousPolarPos := PolarCoordinate{LeftDist: Settings.StartingLeftDist_MM, RightDist: Settings.StartingRightDist_MM}
+	startingLocation := previousPolarPos.ToCoord(polarSystem)
+
+	fmt.Println("Start Location", startingLocation, "Initial Polar", previousPolarPos)
+
+	if startingLocation.IsNaN() {
+		panic(fmt.Sprint("Starting location is not a valid number, setup has impossible values"))
+	}
+
+	// setup 0,0 as the initial location of the plot head
+	polarSystem.XOffset = startingLocation.X
+	polarSystem.YOffset = startingLocation.Y
+
+	//var interp PositionInterpolater = new(LinearInterpolater)
+	// var interp = new(TrapezoidInterpolater)
+
+	target, chanOpen := <-plotCoords
+	if !chanOpen {
+		return
+	}
+	origin := target
+
+	// var interp = new(TrapezoidInterpolater)
+
+	// leftRamp := TrapezoidRamp{}
+	// rightRamp := TrapezoidRamp{}
+
+	var currentPenUp bool = true // arduino code defaults to pen up on ResetCommand
+	var anotherTarget bool = true
+
+	for anotherTarget {
+		nextTarget, chanOpen := <-plotCoords
+		if !chanOpen {
+			anotherTarget = false
+			nextTarget = target
+		}
+
+		if target.PenUp != currentPenUp {
+			commands <- uint8(penPosition)
+			if target.PenUp {
+				commands <- PenUp().angle
+			} else {
+				commands <- PenDown().angle
+			}
+			currentPenUp = target.PenUp
+		}
+
+		// polarTarget := target.Minus(origin).ToPolar(polarSystem)
+
+		// nextLeftRamp := leftRamp.Next(polarTarget.LeftDist)
+		// nextRightRamp := rightRamp.Next(polarTarget.RightDist)
+
+		// sendRamp(commands, left, nextLeftRamp.Ramp())
+		// sendRamp(commands, right, nextRightRamp.Ramp())
+
+		origin = target
+		target = nextTarget
+	}
+	fmt.Println("Done generating ramps")
+}
+
+// GenerateSteps Takes in coordinates and outputs stepData
 func GenerateSteps(plotCoords <-chan Coordinate, stepData chan<- int8) {
 
 	defer close(stepData)

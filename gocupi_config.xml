@@ -32,6 +32,6 @@
 	<MousePath>/dev/input/event2</MousePath>
 
 	<!-- Serial port to use for communications -->
-	<SerialPortPath>/dev/ttyUSB0</SerialPortPath>
+	<SerialPortPath>/dev/cu.SLAB_USBtoUART</SerialPortPath>
 
 </SettingsData>
