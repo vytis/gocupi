@@ -4,3 +4,4 @@ gocupi
 .build
 arduino/.DS_Store
 arduino/StepperDriver/build
+*.DS_Store
