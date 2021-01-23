@@ -472,24 +472,28 @@ func main() {
 	commands := make(chan uint8, 1024)
 	go GenerateCommands(plotCoords, commands)
 	PrintCommands(commands)
-	// stepData := make(chan int8, 1024)
-	// go GenerateSteps(plotCoords, stepData)
-	// switch {
-	// case *countFlag:
-	// 	CountSteps(stepData)
-	// case *toFileFlag:
-	// 	WriteStepsToFile(stepData)
-	// case *toChartFlag:
-	// 	WriteStepsToChart(stepData)
-	// default:
-	// 	WriteStepsToSerial(stepData, *pauseOnPenUp)
-	// }
+	return
+	stepData := make(chan int8, 1024)
+	go GenerateSteps(plotCoords, stepData)
+	switch {
+	case *countFlag:
+		CountSteps(stepData)
+	case *toFileFlag:
+		WriteStepsToFile(stepData)
+	case *toChartFlag:
+		WriteStepsToChart(stepData)
+	default:
+		WriteStepsToSerial(stepData, *pauseOnPenUp)
+	}
 }
 
 func PrintCommands(commands <-chan uint8) {
 	for value := range commands {
-		fmt.Println("%x", value)
+		_ = value
+		fmt.Print(".")
 	}
+	fmt.Println("")
+	fmt.Println("")
 }
 
 func FlipPlotCoords(flipX, flipY bool, coords <-chan Coordinate, flippedCoords chan<- Coordinate) {

@@ -35,11 +35,10 @@ type Feedback struct {
 type command uint8
 
 const (
-	enableMotors         command = iota
-	disableMotors        command = iota
-	penPosition          command = iota
-	trapezoidalRampLeft  command = iota
-	trapezoidalRampRight command = iota
+	enableMotors    command = iota
+	disableMotors   command = iota
+	penPosition     command = iota
+	trapezoidalRamp command = iota
 )
 
 type motor uint8
@@ -64,30 +63,78 @@ func PenDown() PenPosition {
 	return PenPosition{160}
 }
 
-// RampParameters is used in velocity mode
-type RampParameters struct {
-	positiveDirection bool   // true - going forward
-	aMax              uint16 // Second acceleration between V1 and VMAX
-	vMax              uint32 // Motion ramp target velocity in velocity mode
-	duration          uint32 // Time it takes to complete the movement in microseconds
+// AxisRampParameters for single axis
+type AxisRampParameters struct {
+	PositiveDirection bool   // true - going forward
+	AMax              uint16 // Second acceleration between V1 and VMAX
+	VMax              uint32 // Motion ramp target velocity in velocity mode
 }
 
-func (data TrapezoidRamp) Ramp() RampParameters {
-	var direction = data.directionForward
+// Ramp - scaled parameters for single axis
+func (data TrapezoidInterpolater) scaled(scale float64) AxisRampParameters {
 	var maxSpeed = math.Pow(2, 23) - 512
-	var speedInSteps = math.Min(math.Abs(data.exitSpeed)/Settings.StepSize_MM, maxSpeed)
+	var speedInSteps = math.Min(math.Abs(data.exitSpeed*scale)/Settings.StepSize_MM, maxSpeed)
 
 	var maxAcceleration = math.Pow(2, 16) - 1
-	var accelerationInSteps = math.Min(math.Abs(data.acceleration)/Settings.StepSize_MM, maxAcceleration)
+	var accelerationInSteps = math.Min(math.Abs(data.acceleration*scale)/Settings.StepSize_MM, maxAcceleration)
 
-	var time = data.time * 1000 * 1000 // convert to microseconds
-	return RampParameters{
-		positiveDirection: direction,
-		aMax:              uint16(accelerationInSteps),
-		vMax:              uint32(speedInSteps),
-		duration:          uint32(time),
+	return AxisRampParameters{
+		PositiveDirection: scale > 0,
+		AMax:              uint16(accelerationInSteps),
+		VMax:              uint32(speedInSteps),
 	}
 }
+
+func (data AxisRampParameters) Write() {
+	if data.PositiveDirection {
+		fmt.Print("-->")
+	} else {
+		fmt.Print("<--")
+	}
+	fmt.Println(" A: ", data.AMax, " V: ", data.VMax)
+}
+
+// RampParameters is used in velocity mode
+type RampParameters struct {
+	Left     AxisRampParameters // Left axis parameters
+	Right    AxisRampParameters // Right axis parameters
+	Duration uint32             // Time it takes to complete the movement in microseconds
+}
+
+// Ramp parameters from interpolater
+func (data TrapezoidInterpolater) Ramp(direction PolarCoordinate) RampParameters {
+	var time = data.time * 1000 * 1000 // convert to microseconds
+	return RampParameters{
+		Left:     data.scaled(direction.LeftDist),
+		Right:    data.scaled(direction.RightDist),
+		Duration: uint32(time),
+	}
+}
+
+func (data RampParameters) Write() {
+	fmt.Println("Duration:", data.Duration)
+	fmt.Print("[L] ")
+	data.Left.Write()
+	fmt.Print("[R] ")
+	data.Right.Write()
+}
+
+// func (data TrapezoidRamp) Ramp() RampParameters {
+// 	var direction = data.directionForward
+// 	var maxSpeed = math.Pow(2, 23) - 512
+// 	var speedInSteps = math.Min(math.Abs(data.exitSpeed)/Settings.StepSize_MM, maxSpeed)
+
+// 	var maxAcceleration = math.Pow(2, 16) - 1
+// 	var accelerationInSteps = math.Min(math.Abs(data.acceleration)/Settings.StepSize_MM, maxAcceleration)
+
+// 	var time = data.time * 1000 * 1000 // convert to microseconds
+// 	return RampParameters{
+// 		positiveDirection: direction,
+// 		aMax:              uint16(accelerationInSteps),
+// 		vMax:              uint32(speedInSteps),
+// 		duration:          uint32(time),
+// 	}
+// }
 
 // func (data TrapezoidInterpolater) LeftRamp() RampParameters {
 // 	var direction = data.directionForward
@@ -125,40 +172,32 @@ func (data TrapezoidRamp) Ramp() RampParameters {
 // 	}
 // }
 
-// FullRamp is used in position mode
-type FullRamp struct {
-	// Velocity mode
-	aMax uint16 // Second acceleration between V1 and VMAX
-	vMax uint32 // Motion ramp target velocity in velocity mode
-	// Position mode
-	xTarget          int32  // Target position for position mode
-	vStart           uint32 // Motor start velocity
-	a1               uint16 // First acceleration between VSTART and V1
-	v1               uint32 // First acceleration / deceleration phase threshold velocity
-	dMax             uint16 // Deceleration between VMAX and V1
-	d1               uint16 // Deceleration between V1 and VSTOP
-	vStop            uint32 // Motor stop velocity
-	maxDeceleration  float64
-	stopDeceleration float64
-	maxBow           float64 // 0 in trapezoid mode
-}
+// // FullRamp is used in position mode
+// type FullRamp struct {
+// 	// Velocity mode
+// 	aMax uint16 // Second acceleration between V1 and VMAX
+// 	vMax uint32 // Motion ramp target velocity in velocity mode
+// 	// Position mode
+// 	xTarget          int32  // Target position for position mode
+// 	vStart           uint32 // Motor start velocity
+// 	a1               uint16 // First acceleration between VSTART and V1
+// 	v1               uint32 // First acceleration / deceleration phase threshold velocity
+// 	dMax             uint16 // Deceleration between VMAX and V1
+// 	d1               uint16 // Deceleration between V1 and VSTOP
+// 	vStop            uint32 // Motor stop velocity
+// 	maxDeceleration  float64
+// 	stopDeceleration float64
+// 	maxBow           float64 // 0 in trapezoid mode
+// }
 
-func sendRamp(commands chan<- uint8, motor motor, ramp RampParameters) {
+func sendRamp(commands chan<- uint8, ramp RampParameters) {
 	var values bytes.Buffer
 	enc := gob.NewEncoder(&values)
 	err := enc.Encode(ramp)
 	if err != nil {
 		log.Fatal("encode error:", err)
 	}
-	switch motor {
-	case left:
-		commands <- uint8(trapezoidalRampLeft)
-		break
-	case right:
-		return
-		commands <- uint8(trapezoidalRampRight)
-		break
-	}
+	commands <- uint8(trapezoidalRamp)
 
 	for i := 0; i < values.Len(); i++ {
 		var value, err = values.ReadByte()
@@ -187,7 +226,7 @@ func GenerateCommands(plotCoords <-chan Coordinate, commands chan<- uint8) {
 	polarSystem.YOffset = startingLocation.Y
 
 	//var interp PositionInterpolater = new(LinearInterpolater)
-	// var interp = new(TrapezoidInterpolater)
+	var interp = new(TrapezoidInterpolater)
 
 	target, chanOpen := <-plotCoords
 	if !chanOpen {
@@ -220,13 +259,15 @@ func GenerateCommands(plotCoords <-chan Coordinate, commands chan<- uint8) {
 			currentPenUp = target.PenUp
 		}
 
+		interp.Setup(origin, target, nextTarget)
+		interp.WriteData()
+		direction := interp.direction.ToPolar(polarSystem)
+		ramp := interp.Ramp(direction)
+		ramp.Write()
+
 		// polarTarget := target.Minus(origin).ToPolar(polarSystem)
 
-		// nextLeftRamp := leftRamp.Next(polarTarget.LeftDist)
-		// nextRightRamp := rightRamp.Next(polarTarget.RightDist)
-
-		// sendRamp(commands, left, nextLeftRamp.Ramp())
-		// sendRamp(commands, right, nextRightRamp.Ramp())
+		sendRamp(commands, ramp)
 
 		origin = target
 		target = nextTarget
