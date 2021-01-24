@@ -2,3 +2,5 @@ gocupi
 
 .project
 .build
+*.DS_Store
+build/
