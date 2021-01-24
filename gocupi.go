@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/vytis/gocupi/polargraph"
+	p "github.com/vytis/gocupi/polargraph"
 )
 
 // set flag usage variable so that entire help will be output
@@ -18,7 +18,7 @@ func init() {
 
 // main
 func main() {
-	Settings.Read()
+	p.Settings.Read()
 
 	toImageFlag := flag.Bool("toimage", false, "Output result to an image file instead of to the stepper")
 	toChartFlag := flag.Bool("tochart", false, "Output a chart of the movement and velocity")
@@ -31,7 +31,7 @@ func main() {
 		return
 	}
 
-	plotCoords := make(chan Coordinate, 1024)
+	plotCoords := make(chan p.Coordinate, 1024)
 	var err error
 	var params []float64
 
@@ -56,9 +56,9 @@ func main() {
 				return
 			}
 
-			MoveSpool(leftSpool, params[0])
+			p.MoveSpool(leftSpool, params[0])
 		} else {
-			InteractiveMoveSpool()
+			p.InteractiveMoveSpool()
 		}
 		return
 
@@ -79,20 +79,20 @@ func main() {
 		}
 
 		fmt.Println("Generating svg path")
-		input, width, height := ParseSvgFile(args[1])
-		var data []Coordinate
+		input, width, height := p.ParseSvgFile(args[1])
+		var data []p.Coordinate
 		if optimize {
-			data = OptimizeTravel(input)
+			data = p.OptimizeTravel(input)
 		} else {
 			data = input
 		}
 
-		go GenerateSvgPath(data, plotCoords)
+		go p.GenerateSvgPath(data, plotCoords)
 
 		if *toImageFlag {
 			svgFileName := strings.Replace(args[1], ".svg", ".png", -1)
 			fmt.Println("Outputting to image ", svgFileName)
-			DrawToImageExact(svgFileName, width, height, plotCoords)
+			p.DrawToImageExact(svgFileName, width, height, plotCoords)
 			return
 		}
 
@@ -103,18 +103,18 @@ func main() {
 
 	// output the max speed and acceleration
 	fmt.Println()
-	fmt.Printf("MaxSpeed: %.3f mm/s Accel: %.3f mm/s^2", Settings.MaxSpeed_MM_S, Settings.Acceleration_MM_S2)
+	fmt.Printf("MaxSpeed: %.3f mm/s Accel: %.3f mm/s^2", p.Settings.MaxSpeed_MM_S, p.Settings.Acceleration_MM_S2)
 	fmt.Println()
 
 	stepData := make(chan int8, 1024)
-	go GenerateSteps(plotCoords, stepData)
+	go p.GenerateSteps(plotCoords, stepData)
 	switch {
 	case *countFlag:
-		CountSteps(stepData)
+		p.CountSteps(stepData)
 	case *toChartFlag:
-		WriteStepsToChart(stepData)
+		p.WriteStepsToChart(stepData)
 	default:
-		WriteStepsToSerial(stepData)
+		p.WriteStepsToSerial(stepData)
 	}
 }
 

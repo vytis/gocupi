@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/vytis/svg"
+	"github.com/rustyoz/svg"
 )
 
 func convertToMM(value float64, unit string) (inMM float64) {
@@ -73,8 +73,6 @@ func ParseSvgFile(fileName string) (data []Coordinate, svgWidth float64, svgHeig
 			fmt.Println("SVG: Curve not supported")
 		case svg.LineInstruction:
 			data = append(data, Coordinate{X: convertToMM(msg.M[0], "px") * scaleX, Y: convertToMM(msg.M[1], "px") * scaleY, PenUp: false})
-		case svg.HLineInstruction:
-			fmt.Println("SVG: HLine not supported")
 		case svg.CloseInstruction:
 			fmt.Println("SVG: Close not supported")
 		case svg.PaintInstruction:
