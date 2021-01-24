@@ -52,13 +52,13 @@ func TestDistance(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	distance := g1.DistanceTo(g2)
 
@@ -72,13 +72,13 @@ func TestReversedDistance(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 5, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 5, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	distance := g1.DistanceToReversed(g2)
 
@@ -92,7 +92,7 @@ func TestLength(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	l1 := g1.Length()
 
@@ -105,8 +105,7 @@ func TestLength(t *testing.T) {
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 	g2_cords[2] = Coordinate{X: 10, Y: 12, PenUp: false}
 
-
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	l2 := g2.Length()
 
@@ -120,19 +119,19 @@ func TestEquals(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	g3_cords := make([]Coordinate, 2)
 	g3_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g3_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g3 := Glyph{ Coordinates: g3_cords}
+	g3 := Glyph{Coordinates: g3_cords}
 
 	if !g1.Equals(g1) {
 		t.Error("Should be equal to self")
@@ -147,19 +146,18 @@ func TestEquals(t *testing.T) {
 	}
 }
 
-
 func TestTotalTravel(t *testing.T) {
 	g1_cords := make([]Coordinate, 2)
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	glyphs := make([]Glyph, 2)
 	glyphs[0] = g1
@@ -178,20 +176,19 @@ func TestPenUpTravel(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	g3_cords := make([]Coordinate, 2)
 	g3_cords[0] = Coordinate{X: 10, Y: 7, PenUp: true}
 	g3_cords[1] = Coordinate{X: 5, Y: 7, PenUp: false}
 
-	g3 := Glyph{ Coordinates: g3_cords}
-
+	g3 := Glyph{Coordinates: g3_cords}
 
 	glyphs := make([]Glyph, 3)
 	glyphs[0] = g1
@@ -212,11 +209,11 @@ func TestReversed(t *testing.T) {
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 	g1_cords[2] = Coordinate{X: 5, Y: 10, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	reversed := g1.Reversed()
 	if !reversed.Coordinates[0].Same(g1.Coordinates[2]) {
-		t.Error("Not reversed!, reversed:", reversed,"original:", g1)
+		t.Error("Not reversed!, reversed:", reversed, "original:", g1)
 	}
 
 }
@@ -233,13 +230,13 @@ func TestCheckMergeGlyphs(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 	g1_cords[2] = Coordinate{X: 5, Y: 10, PenUp: false}
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 10, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	if g1.CanBeMergedWith(g2) == false {
 		t.Error("Can be merged:", g1, g2)
@@ -255,13 +252,13 @@ func TestMergeGlyphs(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 	g1_cords[2] = Coordinate{X: 5, Y: 10, PenUp: false}
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 10, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	merged := g1.MergeWith(g2)
 
@@ -279,14 +276,14 @@ func TestReorderOne(t *testing.T) {
 	g1_cords[1] = Coordinate{X: 3, Y: 11, PenUp: false}
 	g1_cords[2] = Coordinate{X: 4, Y: 10, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	glyphs := make([]Glyph, 1)
 	glyphs[0] = g1
 
 	reordered := ReorderGlyphs(glyphs)
 
-	if len(reordered) !=1 {
+	if len(reordered) != 1 {
 		t.Error("Failed reordering:", reordered)
 	}
 }
@@ -297,27 +294,25 @@ func TestReorder(t *testing.T) {
 	g1_cords[1] = Coordinate{X: 3, Y: 11, PenUp: false}
 	g1_cords[2] = Coordinate{X: 4, Y: 10, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 3, Y: 7, PenUp: true}
 	g2_cords[1] = Coordinate{X: 6, Y: 7, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	g3_cords := make([]Coordinate, 3)
 	g3_cords[0] = Coordinate{X: 4, Y: 9, PenUp: true}
 	g3_cords[1] = Coordinate{X: 7, Y: 9, PenUp: false}
 	g3_cords[2] = Coordinate{X: 7, Y: 7, PenUp: false}
 
-	g3 := Glyph{ Coordinates: g3_cords}
-
+	g3 := Glyph{Coordinates: g3_cords}
 
 	glyphs := make([]Glyph, 3)
 	glyphs[0] = g1
 	glyphs[1] = g2
 	glyphs[2] = g3
-
 
 	reordered := ReorderGlyphs(glyphs)
 
@@ -345,33 +340,32 @@ func TestReorderMerge(t *testing.T) {
 	g1_cords[1] = Coordinate{X: 3, Y: 11, PenUp: false}
 	g1_cords[2] = Coordinate{X: 4, Y: 10, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 3, Y: 7, PenUp: true}
 	g2_cords[1] = Coordinate{X: 7, Y: 7, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	g3_cords := make([]Coordinate, 3)
 	g3_cords[0] = Coordinate{X: 4, Y: 9, PenUp: true}
 	g3_cords[1] = Coordinate{X: 7, Y: 9, PenUp: false}
 	g3_cords[2] = Coordinate{X: 7, Y: 7, PenUp: false}
 
-	g3 := Glyph{ Coordinates: g3_cords}
+	g3 := Glyph{Coordinates: g3_cords}
 
 	g4_cords := make([]Coordinate, 2)
 	g4_cords[0] = Coordinate{X: 3, Y: 7, PenUp: true}
 	g4_cords[1] = Coordinate{X: 3, Y: 4, PenUp: false}
 
-	g4 := Glyph{ Coordinates: g4_cords}
+	g4 := Glyph{Coordinates: g4_cords}
 
 	glyphs := make([]Glyph, 4)
 	glyphs[0] = g1
 	glyphs[1] = g2
 	glyphs[2] = g3
 	glyphs[3] = g4
-
 
 	reordered := ReorderGlyphs(glyphs)
 
@@ -396,13 +390,13 @@ func TestMakeCoordinates(t *testing.T) {
 	g1_cords[0] = Coordinate{X: 0, Y: 5, PenUp: true}
 	g1_cords[1] = Coordinate{X: 5, Y: 5, PenUp: false}
 
-	g1 := Glyph{ Coordinates: g1_cords}
+	g1 := Glyph{Coordinates: g1_cords}
 
 	g2_cords := make([]Coordinate, 2)
 	g2_cords[0] = Coordinate{X: 5, Y: 2, PenUp: true}
 	g2_cords[1] = Coordinate{X: 10, Y: 2, PenUp: false}
 
-	g2 := Glyph{ Coordinates: g2_cords}
+	g2 := Glyph{Coordinates: g2_cords}
 
 	glyphs := make([]Glyph, 2)
 	glyphs[0] = g1

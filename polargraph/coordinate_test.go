@@ -91,8 +91,10 @@ func TestCircleLineIntersection(t *testing.T) {
 
 	circle := Circle{Coordinate{X: 0, Y: 0}, 5, false}
 	line := LineSegment{Coordinate{X: 0, Y: 0}, Coordinate{X: 2, Y: 0}}
+	var p1, p2 Coordinate
+	var p1Valid, p2Valid bool
 
-	p1, p1Valid, p2, p2Valid := circle.Intersection(line)
+	_, p1Valid, _, p2Valid = circle.Intersection(line)
 	if p1Valid || p2Valid {
 		t.Error("Should have detected intersection for ", circle, line)
 	}

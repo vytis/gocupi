@@ -22,7 +22,7 @@ func WriteStepsToChart(stepData <-chan int8) {
 	stepIndex := 0
 	for stepDataOpen := true; stepDataOpen; {
 
-		byteDataL, stepDataOpen = <-stepData
+		byteDataL = <-stepData
 		byteDataR, stepDataOpen = <-stepData
 
 		leftVel[stepIndex].X = float64(stepIndex)

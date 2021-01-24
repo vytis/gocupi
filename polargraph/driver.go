@@ -35,7 +35,7 @@ func GenerateSteps(plotCoords <-chan Coordinate, stepData chan<- int8) {
 	fmt.Println("Start Location", startingLocation, "Initial Polar", previousPolarPos)
 
 	if startingLocation.IsNaN() {
-		panic(fmt.Sprint("Starting location is not a valid number, setup has impossible values"))
+		panic("Starting location is not a valid number, setup has impossible values")
 	}
 
 	// setup 0,0 as the initial location of the plot head
@@ -137,10 +137,13 @@ func WriteStepsToSerial(stepData <-chan int8) {
 
 	previousSend := time.Now()
 	var totalSends int = 0
-	var byteData int8 = 0
+	var byteData int8
 
 	// send a -128 to force the arduino to restart and rerequest data
-	s.Write([]byte{ResetCommand})
+	_, err = s.Write([]byte{ResetCommand})
+	if err != nil {
+		panic(err)
+	}
 
 	var pauseAfterWrite = false
 
@@ -163,7 +166,7 @@ func WriteStepsToSerial(stepData <-chan int8) {
 				writeData[i+1] = byte(0)
 			} else {
 				// even if stepData is closed and empty, receiving from it will return default value 0 for byteData and false for stepDataOpen
-				byteData, stepDataOpen = <-stepData
+				byteData = <-stepData
 				writeData[i] = byte(byteData)
 				byteData, stepDataOpen = <-stepData
 				writeData[i+1] = byte(byteData)
@@ -180,14 +183,20 @@ func WriteStepsToSerial(stepData <-chan int8) {
 			previousSend = curTime
 		}
 
-		s.Write(writeData)
+		_, err = s.Write(writeData)
+		if err != nil {
+			panic(err)
+		}
 
 		if pauseAfterWrite {
 			pauseAfterWrite = false
 
 			fmt.Println("Press any key to continue...")
 			reader := bufio.NewReader(os.Stdin)
-			reader.ReadString('\n')
+			_, err = reader.ReadString('\n')
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }

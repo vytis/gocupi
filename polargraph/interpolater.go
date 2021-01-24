@@ -99,7 +99,6 @@ func (data *TrapezoidInterpolater) Setup(origin, dest, nextDest Coordinate) {
 	// special case of not going anywhere
 	if origin == dest {
 		data.origin = origin
-		data.destination = data.destination
 		data.direction = Coordinate{X: 0, Y: 1}
 		data.distance = 0
 		data.exitSpeed = data.entrySpeed
@@ -124,7 +123,7 @@ func (data *TrapezoidInterpolater) Setup(origin, dest, nextDest Coordinate) {
 
 	nextDirection := nextDest.Minus(dest)
 	if nextDirection.Len() == 0 ||
-		origin.PenUp == false && dest.PenUp == true {
+		!origin.PenUp && dest.PenUp {
 		// if there is no next direction or we have to stop for pen movement, make the exit speed 0 by pretending the next move will be backwards from current direction
 		nextDirection = Coordinate{X: -data.direction.X, Y: -data.direction.Y}
 	} else {
@@ -208,7 +207,7 @@ func (data *TrapezoidInterpolater) Position(slice float64) Coordinate {
 	//fmt.Println("Slice", slice, "out of", data.slices, "percent", slice/data.slices)
 
 	time := (slice / data.slices) * data.time
-	var distanceAlongMovement float64 = 0
+	var distanceAlongMovement float64
 
 	if time < data.accelTime { // in acceleration
 
