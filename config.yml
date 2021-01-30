@@ -1,0 +1,10 @@
+board:
+  width: 1000
+hardware:
+  spool_circumference_mm: 60
+  single_step_degrees: 0.225
+  max_acceleration_s: 0.5
+  serial_port: "/dev/ttyUSB0"
+position:
+  left: 84
+  right: 940

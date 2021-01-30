@@ -19,6 +19,7 @@ func init() {
 // main
 func main() {
 	p.Settings.Read()
+	p.Config.Read()
 
 	toImageFlag := flag.Bool("toimage", false, "Output result to an image file instead of to the stepper")
 	toChartFlag := flag.Bool("tochart", false, "Output a chart of the movement and velocity")
