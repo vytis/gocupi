@@ -14,7 +14,7 @@ import (
 func ParseSvgFile(fileName string) (data []Coordinate, svgWidth float64, svgHeight float64) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Could not open SVG at %s", fileName))
 	}
 
 	data = make([]Coordinate, 0)
